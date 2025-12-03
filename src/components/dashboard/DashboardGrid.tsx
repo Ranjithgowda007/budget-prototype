@@ -19,21 +19,8 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Plus } from 'lucide-react';
-import { StatsCard } from './widgets/StatsCard';
-import { ChartCard } from './widgets/ChartCard';
-import { ActivityList } from './widgets/ActivityList';
-import { MOCK_STATS } from '@/data/mockData';
+import { WIDGET_REGISTRY, getWidgetById } from '@/components/widgets/registry';
 import { cn } from '@/lib/utils';
-
-// Widget Registry
-const WIDGET_REGISTRY: any = {
-    'stats-total': <StatsCard {...MOCK_STATS[0]} trend={MOCK_STATS[0].trend as 'up' | 'down' | 'neutral'} />,
-    'stats-expenditure': <StatsCard {...MOCK_STATS[1]} trend={MOCK_STATS[1].trend as 'up' | 'down' | 'neutral'} />,
-    'stats-remaining': <StatsCard {...MOCK_STATS[2]} trend={MOCK_STATS[2].trend as 'up' | 'down' | 'neutral'} />,
-    'stats-pending': <StatsCard {...MOCK_STATS[3]} trend={MOCK_STATS[3].trend as 'up' | 'down' | 'neutral'} />,
-    'chart-main': <ChartCard />,
-    'activity-list': <ActivityList />,
-};
 
 function SortableItem({ id, children, className }: { id: string, children: React.ReactNode, className?: string }) {
     const {
@@ -67,8 +54,8 @@ function SortableItem({ id, children, className }: { id: string, children: React
     );
 }
 
-export function DashboardGrid() {
-    const [items, setItems] = useState([
+export function DashboardGrid({ defaultWidgets }: { defaultWidgets?: string[] }) {
+    const [items, setItems] = useState(defaultWidgets || [
         'stats-total',
         'stats-expenditure',
         'stats-remaining',
@@ -112,14 +99,15 @@ export function DashboardGrid() {
             <SortableContext items={items} strategy={rectSortingStrategy}>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pb-10">
                     {items.map((id) => {
-                        const isWide = id === 'chart-main' || id === 'activity-list';
+                        const isWide = id === 'chart-main' || id === 'activity-list' || id === 'module-list';
+                        const isFullWidth = id === 'module-list';
                         return (
                             <SortableItem
                                 key={id}
                                 id={id}
-                                className={isWide ? 'col-span-1 md:col-span-2' : 'col-span-1'}
+                                className={isFullWidth ? 'col-span-1 md:col-span-2 lg:col-span-4' : (isWide ? 'col-span-1 md:col-span-2' : 'col-span-1')}
                             >
-                                {WIDGET_REGISTRY[id]}
+                                {WIDGET_REGISTRY[id]?.component}
                             </SortableItem>
                         );
                     })}
@@ -135,7 +123,7 @@ export function DashboardGrid() {
             <DragOverlay>
                 {activeId ? (
                     <div className="opacity-90">
-                        {WIDGET_REGISTRY[activeId]}
+                        {WIDGET_REGISTRY[activeId]?.component}
                     </div>
                 ) : null}
             </DragOverlay>

@@ -71,18 +71,47 @@ const TranslateIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
+import { getModuleById } from '@/config/modules';
+
+// ... (keep existing imports)
+
 export function Navbar() {
+    const pathname = usePathname();
+    const segments = pathname.split('/').filter(Boolean);
+
     return (
         <nav className="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-md border-b border-slate-200 h-16 px-6 pl-20 flex items-center justify-between shadow-sm">
-            {/* Left Section: Breadcrumbs / Title */}
             {/* Left Section: Breadcrumbs */}
             <div className="flex items-center gap-4">
                 <div className="flex items-center text-sm text-slate-500 gap-2">
-                    <span className="hover:text-blue-700 cursor-pointer transition-colors font-medium">Home</span>
-                    <ChevronRight size={16} />
-                    <span className="hover:text-blue-700 cursor-pointer transition-colors font-medium">Budget</span>
-                    <ChevronRight size={16} />
-                    <span className="text-blue-700 font-bold text-base">Dashboard</span>
+                    <Link href="/dashboard" className="hover:text-blue-700 cursor-pointer transition-colors font-medium">
+                        Home
+                    </Link>
+                    {segments.map((segment, index) => {
+                        const path = `/${segments.slice(0, index + 1).join('/')}`;
+                        const isLast = index === segments.length - 1;
+
+                        // Resolve module name if it's a module ID
+                        const moduleConfig = getModuleById(segment);
+                        const label = moduleConfig ? moduleConfig.name : segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, ' ');
+
+                        return (
+                            <React.Fragment key={path}>
+                                <ChevronRight size={16} />
+                                {isLast ? (
+                                    <span className="text-blue-700 font-bold text-base">
+                                        {label}
+                                    </span>
+                                ) : (
+                                    <Link href={path} className="hover:text-blue-700 cursor-pointer transition-colors font-medium">
+                                        {label}
+                                    </Link>
+                                )}
+                            </React.Fragment>
+                        );
+                    })}
                 </div>
             </div>
 

@@ -8,26 +8,44 @@ import {
     Landmark,
     LogOut,
     Circle,
-    Search
+    Search,
+    LayoutDashboard,
+    FileText,
+    Settings,
+    Wallet,
+    Shield,
+    BookOpen,
+    PieChart,
+    Users,
+    Bell,
+    FileBarChart,
+    Briefcase,
+    CreditCard,
+    FileCheck,
+    AlertCircle,
+    Award,
+    UserCheck,
+    ShoppingCart,
+    HardDrive
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
-import { NAVIGATION_ITEMS, SidebarItem } from '@/data/navigation';
+import { SidebarItem } from '@/data/navigation';
 import {
     Collapsible,
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 
-export function Sidebar() {
+export function Sidebar({ items = [] }: { items?: SidebarItem[] }) {
     const [isHovered, setIsHovered] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
     // Filter navigation items based on search query
     const filteredItems = useMemo(() => {
-        if (!searchQuery.trim()) return NAVIGATION_ITEMS;
+        if (!searchQuery.trim()) return items;
 
         const lowerQuery = searchQuery.toLowerCase();
 
@@ -54,8 +72,8 @@ export function Sidebar() {
             return null;
         };
 
-        return NAVIGATION_ITEMS.map(filterItem).filter((item): item is SidebarItem => item !== null);
-    }, [searchQuery]);
+        return items.map(filterItem).filter((item): item is SidebarItem => item !== null);
+    }, [searchQuery, items]);
 
     // Auto-expand sidebar when searching
     const isExpanded = isHovered || searchQuery.length > 0;
@@ -170,20 +188,46 @@ function SidebarMenuItem({
         if (forceExpand) setIsOpen(true);
     }, [forceExpand]);
 
-    const ItemContent = () => (
-        <>
-            {showIcon && item.icon && <item.icon size={20} className="shrink-0 text-slate-500 group-hover:text-blue-600 transition-colors" />}
+    // Icon Map
+    const IconMap: any = {
+        LayoutDashboard,
+        FileText,
+        Settings,
+        Wallet,
+        Shield,
+        BookOpen,
+        PieChart,
+        Users,
+        Bell,
+        FileBarChart,
+        Landmark,
+        Briefcase,
+        CreditCard,
+        FileCheck,
+        AlertCircle,
+        Award,
+        UserCheck,
+        ShoppingCart,
+        HardDrive
+    };
 
-            <span className={cn(
-                "font-medium text-left leading-snug transition-all duration-300 flex-1 break-words",
-                showIcon ? "ml-3 text-sm" : "text-sm",
-                level > 0 ? "text-slate-600 font-normal group-hover:text-slate-900" : "text-slate-700 group-hover:text-blue-700",
-                isSidebarExpanded ? "opacity-100 w-auto" : "opacity-0 w-0 hidden"
-            )}>
-                {item.label}
-            </span>
-        </>
-    );
+    const ItemContent = () => {
+        const IconComponent = item.icon ? IconMap[item.icon] : null;
+        return (
+            <>
+                {showIcon && IconComponent && <IconComponent size={20} className="shrink-0 text-slate-500 group-hover:text-blue-600 transition-colors" />}
+
+                <span className={cn(
+                    "font-medium text-left leading-snug transition-all duration-300 flex-1 break-words",
+                    showIcon ? "ml-3 text-sm" : "text-sm",
+                    level > 0 ? "text-slate-600 font-normal group-hover:text-slate-900" : "text-slate-700 group-hover:text-blue-700",
+                    isSidebarExpanded ? "opacity-100 w-auto" : "opacity-0 w-0 hidden"
+                )}>
+                    {item.label}
+                </span>
+            </>
+        );
+    };
 
     // Tree Connectors for Level > 0
     const TreeConnectors = () => {
