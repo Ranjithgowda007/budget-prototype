@@ -395,12 +395,9 @@ export function SmartBudgetGrid({ role, items, estimations }: SmartBudgetGridPro
                                         <div className="px-5 py-4 border-b border-slate-100">
                                             <div className="flex items-start justify-between gap-4">
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <span className={cn("inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold text-white", statusInfo.color)}>
-                                                            <statusInfo.icon size={12} />
-                                                            {statusInfo.label}
-                                                        </span>
-                                                        <code className="text-xs font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
+                                                    {/* Budget Line Code - Most Prominent */}
+                                                    <div className="flex items-center gap-3 mb-2">
+                                                        <code className="text-lg font-bold font-mono text-slate-900 tracking-wide">
                                                             {item.budgetHead}
                                                         </code>
                                                         <span className={cn(
@@ -409,8 +406,13 @@ export function SmartBudgetGrid({ role, items, estimations }: SmartBudgetGridPro
                                                         )}>
                                                             {item.chargedOrVoted}
                                                         </span>
+                                                        <span className={cn("inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold text-white", statusInfo.color)}>
+                                                            <statusInfo.icon size={12} />
+                                                            {statusInfo.label}
+                                                        </span>
                                                     </div>
-                                                    <h3 className="font-semibold text-slate-900 text-base leading-snug">
+                                                    {/* Scheme Name - Slightly Larger */}
+                                                    <h3 className="font-semibold text-slate-800 text-base leading-snug">
                                                         {item.scheme}
                                                     </h3>
                                                 </div>
