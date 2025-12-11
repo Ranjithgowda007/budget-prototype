@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -68,6 +68,61 @@ export function SmartBudgetGrid({ role, items, estimations }: SmartBudgetGridPro
     const [assetData, setAssetData] = useState<Record<string, TypedAsset[]>>({});
     const [auditModalOpen, setAuditModalOpen] = useState(false);
     const [activeAuditLine, setActiveAuditLine] = useState<BudgetLineItem | null>(null);
+    const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+    // Validation: Check if all required fields are filled
+    const validateBudgetLines = (): string[] => {
+        const unfilled: string[] = [];
+        items.forEach(item => {
+            if (submittedItems.has(item.id)) return; // Already submitted
+            const data = getItemFormData(item.id);
+            if (!data.reviseEstimateCY || !data.budgetEstimateNextYear) {
+                unfilled.push(item.id);
+            }
+        });
+        return unfilled;
+    };
+
+    // Get count of filled items (for progress display)
+    const getFilledCount = (): number => {
+        let count = 0;
+        items.forEach(item => {
+            if (submittedItems.has(item.id)) {
+                count++;
+                return;
+            }
+            const data = getItemFormData(item.id);
+            if (data.reviseEstimateCY && data.budgetEstimateNextYear) {
+                count++;
+            }
+        });
+        return count;
+    };
+
+    // Batch submit handler
+    const handleBatchSubmit = () => {
+        const unfilledIds = validateBudgetLines();
+        if (unfilledIds.length > 0) {
+            // Scroll to first unfilled card
+            const firstUnfilledRef = cardRefs.current[unfilledIds[0]];
+            if (firstUnfilledRef) {
+                firstUnfilledRef.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setExpandedItems(prev => new Set(prev).add(unfilledIds[0]));
+            }
+            toast.error('Please fill all required fields', {
+                description: `${unfilledIds.length} budget line(s) have missing data`
+            });
+            return;
+        }
+        // Submit all non-submitted items
+        const newSubmitted = new Set(submittedItems);
+        items.forEach(item => newSubmitted.add(item.id));
+        setSubmittedItems(newSubmitted);
+        const action = role === 'creator' ? 'Sent to Verifier' : role === 'verifier' ? 'Sent to Approver' : 'Approved';
+        toast.success(action, {
+            description: `All ${items.length} budget lines submitted successfully`
+        });
+    };
 
     const getItemFormData = (itemId: string): ItemFormData => {
         if (formData[itemId]) return formData[itemId];
@@ -321,12 +376,20 @@ export function SmartBudgetGrid({ role, items, estimations }: SmartBudgetGridPro
                                 : null;
                             const exceedsCeiling = data.budgetEstimateNextYear > (item.ceilingLimit || 0);
 
+                            // Check if this card has missing required fields
+                            const isMissingRequired = !isSubmitted && (!data.reviseEstimateCY || !data.budgetEstimateNextYear);
+
                             return (
-                                <Card key={item.id} className={cn(
-                                    "bg-white shadow-sm overflow-hidden transition-all duration-300",
-                                    "border hover:shadow-md",
-                                    isSubmitted ? "border-l-4 border-l-emerald-500 bg-emerald-50/30" : "border-slate-200"
-                                )}>
+                                <Card
+                                    key={item.id}
+                                    ref={(el) => { cardRefs.current[item.id] = el; }}
+                                    className={cn(
+                                        "bg-white shadow-sm overflow-hidden transition-all duration-300",
+                                        "border hover:shadow-md",
+                                        isSubmitted ? "border-l-4 border-l-emerald-500 bg-emerald-50/30" :
+                                            isMissingRequired ? "border-l-4 border-l-amber-400" : "border-slate-200"
+                                    )}
+                                >
                                     <CardContent className="p-0">
                                         {/* Header */}
                                         <div className="px-5 py-4 border-b border-slate-100">
@@ -483,18 +546,12 @@ export function SmartBudgetGrid({ role, items, estimations }: SmartBudgetGridPro
                                                 >
                                                     <Save size={14} /> Save Draft
                                                 </Button>
-                                                <Button
-                                                    size="sm"
-                                                    className={cn(
-                                                        "h-9 gap-2",
-                                                        isSubmitted ? "bg-emerald-500" : "bg-blue-600 hover:bg-blue-700"
-                                                    )}
-                                                    onClick={() => handleSubmitItem(item.id, item.scheme)}
-                                                    disabled={isSubmitted}
-                                                >
-                                                    {isSubmitted ? <Check size={14} /> : <Send size={14} />}
-                                                    {isSubmitted ? 'Submitted' : role === 'creator' ? 'Send to Verifier' : role === 'verifier' ? 'Send to Approver' : 'Approve'}
-                                                </Button>
+                                                {isSubmitted && (
+                                                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-emerald-100 text-emerald-700 text-sm font-medium">
+                                                        <Check size={14} />
+                                                        Submitted
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
 
@@ -654,6 +711,87 @@ export function SmartBudgetGrid({ role, items, estimations }: SmartBudgetGridPro
                     )}
                 </div>
             </main>
+
+            {/* Fixed Footer with Batch Submit */}
+            {role === 'creator' && (
+                <footer className="flex-shrink-0 bg-white border-t border-slate-200 px-4 py-3 shadow-lg">
+                    <div className="max-w-[1400px] mx-auto flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="text-sm text-slate-600">
+                                <span className="font-semibold text-slate-900">{getFilledCount()}</span>
+                                <span className="text-slate-400"> / </span>
+                                <span>{items.length}</span>
+                                <span className="ml-1">budget lines filled</span>
+                            </div>
+                            {validateBudgetLines().length > 0 && (
+                                <div className="flex items-center gap-1.5 text-amber-600 text-sm">
+                                    <AlertCircle size={16} />
+                                    <span>{validateBudgetLines().length} line(s) need attention</span>
+                                </div>
+                            )}
+                        </div>
+                        <Button
+                            size="lg"
+                            className="gap-2 bg-blue-600 hover:bg-blue-700 px-6"
+                            onClick={handleBatchSubmit}
+                            disabled={submittedItems.size === items.length}
+                        >
+                            <Send size={18} />
+                            {submittedItems.size === items.length ? 'All Submitted' : 'Submit All to Verifier'}
+                        </Button>
+                    </div>
+                </footer>
+            )}
+
+            {/* Footer for Verifier role */}
+            {role === 'verifier' && (
+                <footer className="flex-shrink-0 bg-white border-t border-slate-200 px-4 py-3 shadow-lg">
+                    <div className="max-w-[1400px] mx-auto flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="text-sm text-slate-600">
+                                <span className="font-semibold text-slate-900">{getFilledCount()}</span>
+                                <span className="text-slate-400"> / </span>
+                                <span>{items.length}</span>
+                                <span className="ml-1">budget lines filled</span>
+                            </div>
+                        </div>
+                        <Button
+                            size="lg"
+                            className="gap-2 bg-blue-600 hover:bg-blue-700 px-6"
+                            onClick={handleBatchSubmit}
+                            disabled={submittedItems.size === items.length}
+                        >
+                            <Send size={18} />
+                            {submittedItems.size === items.length ? 'All Submitted' : 'Submit All to Approver'}
+                        </Button>
+                    </div>
+                </footer>
+            )}
+
+            {/* Footer for Approver role */}
+            {role === 'approver' && (
+                <footer className="flex-shrink-0 bg-white border-t border-slate-200 px-4 py-3 shadow-lg">
+                    <div className="max-w-[1400px] mx-auto flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="text-sm text-slate-600">
+                                <span className="font-semibold text-slate-900">{getFilledCount()}</span>
+                                <span className="text-slate-400"> / </span>
+                                <span>{items.length}</span>
+                                <span className="ml-1">budget lines filled</span>
+                            </div>
+                        </div>
+                        <Button
+                            size="lg"
+                            className="gap-2 bg-emerald-600 hover:bg-emerald-700 px-6"
+                            onClick={handleBatchSubmit}
+                            disabled={submittedItems.size === items.length}
+                        >
+                            <CheckCircle2 size={18} />
+                            {submittedItems.size === items.length ? 'All Approved' : 'Approve All'}
+                        </Button>
+                    </div>
+                </footer>
+            )}
         </div>
     );
 }
