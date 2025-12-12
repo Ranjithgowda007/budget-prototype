@@ -449,8 +449,8 @@ export function SmartBudgetGrid({ role, items, estimations }: SmartBudgetGridPro
                                         <div className="px-5 py-4 border-b border-slate-100">
                                             <div className="flex items-start justify-between gap-4">
                                                 <div className="flex-1 min-w-0">
-                                                    {/* Budget Line Code - Most Prominent */}
-                                                    <div className="flex items-center gap-3 mb-2">
+                                                    {/* Budget Line Code with Charged/Voted and Scheme - All on one line */}
+                                                    <div className="flex items-center gap-3 flex-wrap">
                                                         <code className="text-lg font-bold font-mono text-slate-900 tracking-wide">
                                                             <HighlightText text={item.budgetHead || ''} highlight={searchQuery} />
                                                         </code>
@@ -460,11 +460,11 @@ export function SmartBudgetGrid({ role, items, estimations }: SmartBudgetGridPro
                                                         )}>
                                                             {item.chargedOrVoted}
                                                         </span>
+                                                        <span className="text-slate-300">|</span>
+                                                        <h3 className="font-medium text-slate-600 text-sm leading-snug truncate">
+                                                            {item.scheme}
+                                                        </h3>
                                                     </div>
-                                                    {/* Scheme Name - Slightly Larger */}
-                                                    <h3 className="font-semibold text-slate-800 text-base leading-snug">
-                                                        {item.scheme}
-                                                    </h3>
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <TrendAnalysisPopup budgetLine={item} history={history} />
