@@ -251,12 +251,39 @@ export function SmartBudgetGrid({ role, items, estimations }: SmartBudgetGridPro
         }
     };
 
+    // Highlight search text in budget head
+    const HighlightText = ({ text, highlight }: { text: string; highlight: string }) => {
+        if (!highlight.trim()) {
+            return <>{text}</>;
+        }
+        const regex = new RegExp(`(${highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        const parts = text.split(regex);
+        return (
+            <>
+                {parts.map((part, i) =>
+                    regex.test(part) ? (
+                        <mark key={i} className="bg-yellow-300 text-slate-900 rounded px-0.5">
+                            {part}
+                        </mark>
+                    ) : (
+                        <span key={i}>{part}</span>
+                    )
+                )}
+            </>
+        );
+    };
+
     const filteredItems = useMemo(() => {
         return items.filter(item => {
             const est = estimations.find(e => e.budgetLineItemId === item.id);
-            const matchesSearch = item.scheme.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                item.budgetHead?.includes(searchQuery) ||
-                item.objectHead.includes(searchQuery);
+            const query = searchQuery.toLowerCase().trim();
+
+            // Search in budget head (primary), scheme name, and object head
+            const matchesSearch = !query ||
+                item.budgetHead?.toLowerCase().includes(query) ||
+                item.scheme.toLowerCase().includes(query) ||
+                item.objectHead.toLowerCase().includes(query);
+
             const matchesStatus = statusFilter === 'all' || est?.status === statusFilter;
             return matchesSearch && matchesStatus;
         });
@@ -425,7 +452,7 @@ export function SmartBudgetGrid({ role, items, estimations }: SmartBudgetGridPro
                                                     {/* Budget Line Code - Most Prominent */}
                                                     <div className="flex items-center gap-3 mb-2">
                                                         <code className="text-lg font-bold font-mono text-slate-900 tracking-wide">
-                                                            {item.budgetHead}
+                                                            <HighlightText text={item.budgetHead || ''} highlight={searchQuery} />
                                                         </code>
                                                         <span className={cn(
                                                             "text-xs font-bold px-2 py-0.5 rounded",
