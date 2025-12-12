@@ -466,7 +466,7 @@ export function SmartBudgetGrid({ role, items, estimations }: SmartBudgetGridPro
                                                             {item.chargedOrVoted}
                                                         </span>
                                                         <span className="text-slate-300">|</span>
-                                                        <h3 className="font-medium text-slate-600 text-sm leading-snug truncate">
+                                                        <h3 className="font-medium text-slate-900 text-base leading-snug truncate">
                                                             {item.scheme}
                                                         </h3>
                                                     </div>
@@ -488,7 +488,7 @@ export function SmartBudgetGrid({ role, items, estimations }: SmartBudgetGridPro
                                         {/* Main Estimation Grid */}
                                         <div className="px-5 py-4 bg-white">
                                             {/* Row 1: Display Fields - Non-editable */}
-                                            <div className="grid grid-cols-8 gap-x-4 gap-y-1 pb-3 border-b border-slate-200">
+                                            <div className="grid grid-cols-7 gap-x-4 gap-y-1 pb-3 border-b border-slate-200">
                                                 <div className="flex flex-col">
                                                     <Label className="text-xs text-slate-700 uppercase tracking-wide leading-tight font-medium">Budget Estimate (Prev FY)</Label>
                                                     <p className="text-sm font-semibold text-slate-800 font-mono mt-1 h-8 flex items-center">{formatCurrency(history?.fy1 || 0)}</p>
@@ -621,9 +621,26 @@ export function SmartBudgetGrid({ role, items, estimations }: SmartBudgetGridPro
                                                 <textarea
                                                     value={data.remarks || ''}
                                                     onChange={(e) => updateFormData(item.id, 'remarks', e.target.value)}
+                                                    onInput={(e) => {
+                                                        const target = e.target as HTMLTextAreaElement;
+                                                        target.style.height = 'auto';
+                                                        target.style.height = `${Math.max(48, target.scrollHeight)}px`;
+                                                    }}
+                                                    onFocus={(e) => {
+                                                        const target = e.target as HTMLTextAreaElement;
+                                                        if (!target.value) {
+                                                            target.style.height = '80px';
+                                                        }
+                                                    }}
+                                                    onBlur={(e) => {
+                                                        const target = e.target as HTMLTextAreaElement;
+                                                        if (!target.value) {
+                                                            target.style.height = '48px';
+                                                        }
+                                                    }}
                                                     placeholder="Enter remarks/justification (optional)..."
                                                     disabled={isSubmitted}
-                                                    className="w-full h-12 px-3 py-2 text-sm border border-blue-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-200 bg-blue-50 resize-none placeholder:text-slate-500 mt-1"
+                                                    className="w-full min-h-[48px] px-3 py-2 text-sm border border-blue-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-200 bg-blue-50 resize-none placeholder:text-slate-500 mt-1 transition-all duration-200"
                                                     maxLength={2000}
                                                 />
                                             </div>
