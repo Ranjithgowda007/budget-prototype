@@ -5,7 +5,7 @@ import { BudgetLineItem, HistoricalData, EstimationRecord } from '@/data/budget-
 import { formatCurrency, MOCK_HISTORICAL_DATA } from '@/data/budget-estimation/mockData';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, ArrowLeft, Save, Check, Columns, Eye, EyeOff } from 'lucide-react';
+import { Search, Filter, ArrowLeft, Save, Check, Columns, Eye, EyeOff, Upload, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -330,6 +330,25 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
                         </Popover>
 
                         <div className="flex-1" />
+
+                        {/* Import/Export Buttons */}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-2 h-10"
+                            onClick={() => toast.info('Import feature coming soon!')}
+                        >
+                            <Upload size={14} /> Import
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-2 h-10"
+                            onClick={() => toast.info('Export feature coming soon!')}
+                        >
+                            <Download size={14} /> Export
+                        </Button>
+
                         <Button
                             variant="outline"
                             size="sm"
