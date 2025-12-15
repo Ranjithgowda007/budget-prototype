@@ -5,7 +5,7 @@ import { BudgetLineItem, HistoricalData, EstimationRecord } from '@/data/budget-
 import { formatCurrency, MOCK_HISTORICAL_DATA } from '@/data/budget-estimation/mockData';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, ArrowLeft, Save, Check } from 'lucide-react';
+import { Search, Filter, ArrowLeft, Save, Check, Columns, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -15,6 +15,12 @@ import {
     SelectItem,
     SelectTrigger,
 } from '@/components/ui/select';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
 
 // Dynamic FY calculation
 const getCurrentFY = () => {
@@ -56,6 +62,14 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [savedItems, setSavedItems] = useState<Set<string>>(new Set());
     const [submittedItems, setSubmittedItems] = useState<Set<string>>(new Set());
+
+    // Column visibility state - all visible by default
+    const [visibleColumns, setVisibleColumns] = useState<Set<string>>(new Set([
+        'srNo', 'budgetHead', 'schemeNomenclature', 'chargedOrVoted',
+        'bePrev', 'expPrev', 'beCurr', 'allotCurr', 'expCutoff',
+        'proposedExp', 'totalRE', 'reOverBE', 'be1', 'be1OverBE',
+        'be2', 'be3', 'remarks'
+    ]));
 
     const getItemFormData = (itemId: string): ItemFormData => {
         return formData[itemId] || {
@@ -124,10 +138,10 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
 
     // Column definitions
     const columns = [
-        { key: 'srNo', label: 'Sr.', width: 'w-12', sticky: true },
+        { key: 'srNo', label: 'Sr. No', width: 'w-12', sticky: true },
         { key: 'budgetHead', label: 'Budget Head', width: 'w-64', sticky: true },
         { key: 'schemeNomenclature', label: 'Scheme Name', width: 'w-40' },
-        { key: 'chargedOrVoted', label: 'C/V', width: 'w-14' },
+        { key: 'chargedOrVoted', label: 'Charged/Voted', width: 'w-14' },
         { key: 'bePrev', label: `BE (${FY.prev})`, width: 'w-28' },
         { key: 'expPrev', label: `Exp. (${FY.prev})`, width: 'w-28' },
         { key: 'beCurr', label: `BE (${FY.curr})`, width: 'w-28' },
@@ -142,6 +156,37 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
         { key: 'be3', label: `BE3 (${FY.nextPlus2})`, width: 'w-32', editable: true },
         { key: 'remarks', label: 'DDO Remarks', width: 'w-48', editable: true },
     ];
+
+    // Toggle column visibility
+    const toggleColumn = (key: string) => {
+        setVisibleColumns(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(key)) {
+                // Don't allow hiding sticky columns
+                const col = columns.find(c => c.key === key);
+                if (col?.sticky) {
+                    toast.error('Cannot hide sticky columns');
+                    return prev;
+                }
+                newSet.delete(key);
+            } else {
+                newSet.add(key);
+            }
+            return newSet;
+        });
+    };
+
+    const selectAllColumns = () => {
+        setVisibleColumns(new Set(columns.map(c => c.key)));
+    };
+
+    const deselectNonEssential = () => {
+        // Keep only sticky columns and editable columns
+        setVisibleColumns(new Set(columns.filter(c => c.sticky || c.editable).map(c => c.key)));
+    };
+
+    // Get visible columns
+    const displayColumns = columns.filter(col => visibleColumns.has(col.key));
 
     return (
         <div className="h-screen flex flex-col bg-slate-50">
@@ -216,6 +261,74 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
                                 <SelectItem value="approved">Approved</SelectItem>
                             </SelectContent>
                         </Select>
+
+                        {/* Column Visibility Dropdown */}
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" size="sm" className="gap-2 h-10">
+                                    <Columns size={14} />
+                                    <span>Columns</span>
+                                    <span className="bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded-full font-medium">
+                                        {visibleColumns.size}/{columns.length}
+                                    </span>
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-72 p-3" align="end">
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <h4 className="font-semibold text-sm text-slate-900">Toggle Columns</h4>
+                                        <div className="flex gap-1">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-7 text-xs px-2"
+                                                onClick={selectAllColumns}
+                                            >
+                                                <Eye size={12} className="mr-1" /> All
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-7 text-xs px-2"
+                                                onClick={deselectNonEssential}
+                                            >
+                                                <EyeOff size={12} className="mr-1" /> Essential
+                                            </Button>
+                                        </div>
+                                    </div>
+                                    <div className="border-t border-slate-100 pt-2 max-h-64 overflow-y-auto space-y-1">
+                                        {columns.map(col => (
+                                            <label
+                                                key={col.key}
+                                                className={cn(
+                                                    "flex items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors",
+                                                    col.sticky && "bg-blue-50"
+                                                )}
+                                            >
+                                                <Checkbox
+                                                    checked={visibleColumns.has(col.key)}
+                                                    onCheckedChange={() => toggleColumn(col.key)}
+                                                    disabled={col.sticky}
+                                                />
+                                                <span className={cn(
+                                                    "text-sm flex-1",
+                                                    col.sticky ? "text-blue-700 font-medium" : "text-slate-700"
+                                                )}>
+                                                    {col.label}
+                                                </span>
+                                                {col.sticky && (
+                                                    <span className="text-xs text-blue-500 bg-blue-100 px-1.5 py-0.5 rounded">Fixed</span>
+                                                )}
+                                                {col.editable && (
+                                                    <span className="text-xs text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded">Input</span>
+                                                )}
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+
                         <div className="flex-1" />
                         <Button
                             variant="outline"
@@ -246,20 +359,24 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
                             {/* Sticky Header */}
                             <thead className="bg-slate-100 sticky top-0 z-20">
                                 <tr>
-                                    {columns.map((col, idx) => (
-                                        <th
-                                            key={col.key}
-                                            className={cn(
-                                                "px-2 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wide border-b border-slate-200 whitespace-nowrap",
-                                                col.width,
-                                                col.sticky && idx === 0 && "sticky left-0 z-30 bg-slate-100",
-                                                col.sticky && idx === 1 && "sticky left-12 z-30 bg-slate-100 border-r border-slate-300",
-                                                col.editable && "text-blue-800 bg-blue-50"
-                                            )}
-                                        >
-                                            {col.label}
-                                        </th>
-                                    ))}
+                                    {displayColumns.map((col, idx) => {
+                                        const isFirstSticky = col.key === 'srNo';
+                                        const isSecondSticky = col.key === 'budgetHead';
+                                        return (
+                                            <th
+                                                key={col.key}
+                                                className={cn(
+                                                    "px-2 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wide border-b border-slate-200 whitespace-nowrap",
+                                                    col.width,
+                                                    isFirstSticky && "sticky left-0 z-30 bg-slate-100",
+                                                    isSecondSticky && "sticky left-12 z-30 bg-slate-100 border-r border-slate-300",
+                                                    col.editable && "text-blue-800 bg-blue-50"
+                                                )}
+                                            >
+                                                {col.label}
+                                            </th>
+                                        );
+                                    })}
                                 </tr>
                             </thead>
 
@@ -279,6 +396,48 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
                                         ? ((data.budgetEstimateNextYear - history.currentYearBE) / history.currentYearBE * 100).toFixed(1)
                                         : null;
 
+                                    // Render cell content based on column key
+                                    const renderCell = (colKey: string) => {
+                                        switch (colKey) {
+                                            case 'srNo':
+                                                return <td key={colKey} className="px-2 py-2 sticky left-0 z-10 bg-inherit font-bold text-blue-600 text-center">{item.srNo}</td>;
+                                            case 'budgetHead':
+                                                return <td key={colKey} className="px-2 py-2 sticky left-12 z-10 bg-inherit border-r border-slate-200"><code className="text-xs font-mono font-semibold text-slate-900">{item.budgetHead}</code></td>;
+                                            case 'schemeNomenclature':
+                                                return <td key={colKey} className="px-2 py-2 text-slate-700 font-medium truncate max-w-[160px]" title={item.schemeNomenclature || item.scheme}>{item.schemeNomenclature || item.scheme}</td>;
+                                            case 'chargedOrVoted':
+                                                return <td key={colKey} className="px-2 py-2 text-center"><span className={cn("text-xs font-bold px-1.5 py-0.5 rounded", item.chargedOrVoted === 'Charged' ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-600')}>{item.chargedOrVoted === 'Charged' ? 'C' : 'V'}</span></td>;
+                                            case 'bePrev':
+                                                return <td key={colKey} className="px-2 py-2 text-right font-mono text-slate-700">{formatCurrency(history?.fy1 || 0)}</td>;
+                                            case 'expPrev':
+                                                return <td key={colKey} className="px-2 py-2 text-right font-mono text-slate-700">{formatCurrency(history?.actualTillDate || 0)}</td>;
+                                            case 'beCurr':
+                                                return <td key={colKey} className="px-2 py-2 text-right font-mono text-slate-700">{formatCurrency(history?.currentYearBE || 0)}</td>;
+                                            case 'allotCurr':
+                                                return <td key={colKey} className="px-2 py-2 text-right font-mono text-slate-700">{formatCurrency(history?.currentYearBE || 0)}</td>;
+                                            case 'expCutoff':
+                                                return <td key={colKey} className="px-2 py-2 text-right font-mono text-slate-700">{formatCurrency(history?.actualTillDate || 0)}</td>;
+                                            case 'proposedExp':
+                                                return <td key={colKey} className="px-1 py-1 bg-blue-50/50"><Input type="number" value={data.reviseEstimateCY || ''} onChange={(e) => updateFormData(item.id, 'reviseEstimateCY', parseFloat(e.target.value) || 0)} disabled={isSubmitted} className="h-7 text-xs font-mono border-blue-200 focus:border-blue-400 bg-white text-right" placeholder="0" /></td>;
+                                            case 'totalRE':
+                                                return <td key={colKey} className="px-2 py-2 text-right font-mono font-semibold text-slate-900">{formatCurrency(totalRE)}</td>;
+                                            case 'reOverBE':
+                                                return <td key={colKey} className={cn("px-2 py-2 text-right font-mono text-xs", reOverBE && parseFloat(reOverBE) < 0 ? "text-red-600" : "text-slate-600")}>{reOverBE ? `${reOverBE}%` : '—'}</td>;
+                                            case 'be1':
+                                                return <td key={colKey} className="px-1 py-1 bg-blue-50/50"><Input type="number" value={data.budgetEstimateNextYear || ''} onChange={(e) => updateFormData(item.id, 'budgetEstimateNextYear', parseFloat(e.target.value) || 0)} disabled={isSubmitted} className="h-7 text-xs font-mono border-blue-200 focus:border-blue-400 bg-white text-right" placeholder="0" /></td>;
+                                            case 'be1OverBE':
+                                                return <td key={colKey} className={cn("px-2 py-2 text-right font-mono text-xs", be1OverBE && parseFloat(be1OverBE) < 0 ? "text-red-600" : "text-slate-600")}>{be1OverBE ? `${be1OverBE}%` : '—'}</td>;
+                                            case 'be2':
+                                                return <td key={colKey} className="px-1 py-1 bg-blue-50/50"><Input type="number" value={data.forwardEstimateY2 || ''} onChange={(e) => updateFormData(item.id, 'forwardEstimateY2', parseFloat(e.target.value) || 0)} disabled={isSubmitted} className="h-7 text-xs font-mono border-blue-200 focus:border-blue-400 bg-white text-right" placeholder="0" /></td>;
+                                            case 'be3':
+                                                return <td key={colKey} className="px-1 py-1 bg-blue-50/50"><Input type="number" value={data.forwardEstimateY3 || ''} onChange={(e) => updateFormData(item.id, 'forwardEstimateY3', parseFloat(e.target.value) || 0)} disabled={isSubmitted} className="h-7 text-xs font-mono border-blue-200 focus:border-blue-400 bg-white text-right" placeholder="0" /></td>;
+                                            case 'remarks':
+                                                return <td key={colKey} className="px-1 py-1 bg-blue-50/50"><Input type="text" value={data.remarks || ''} onChange={(e) => updateFormData(item.id, 'remarks', e.target.value)} disabled={isSubmitted} className="h-7 text-xs border-blue-200 focus:border-blue-400 bg-white" placeholder="Remarks..." /></td>;
+                                            default:
+                                                return null;
+                                        }
+                                    };
+
                                     return (
                                         <tr
                                             key={item.id}
@@ -289,138 +448,7 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
                                                 isSaved && !isSubmitted && "bg-blue-50/30"
                                             )}
                                         >
-                                            {/* Sr. No - Sticky */}
-                                            <td className="px-2 py-2 sticky left-0 z-10 bg-inherit font-bold text-blue-600 text-center">
-                                                {item.srNo}
-                                            </td>
-
-                                            {/* Budget Head - Sticky */}
-                                            <td className="px-2 py-2 sticky left-12 z-10 bg-inherit border-r border-slate-200">
-                                                <code className="text-xs font-mono font-semibold text-slate-900">
-                                                    {item.budgetHead}
-                                                </code>
-                                            </td>
-
-                                            {/* Scheme Name */}
-                                            <td className="px-2 py-2 text-slate-700 font-medium truncate max-w-[160px]" title={item.schemeNomenclature || item.scheme}>
-                                                {item.schemeNomenclature || item.scheme}
-                                            </td>
-
-                                            {/* C/V */}
-                                            <td className="px-2 py-2 text-center">
-                                                <span className={cn(
-                                                    "text-xs font-bold px-1.5 py-0.5 rounded",
-                                                    item.chargedOrVoted === 'Charged' ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-600'
-                                                )}>
-                                                    {item.chargedOrVoted === 'Charged' ? 'C' : 'V'}
-                                                </span>
-                                            </td>
-
-                                            {/* BE (Prev FY) */}
-                                            <td className="px-2 py-2 text-right font-mono text-slate-700">
-                                                {formatCurrency(history?.fy1 || 0)}
-                                            </td>
-
-                                            {/* Exp (Prev FY) */}
-                                            <td className="px-2 py-2 text-right font-mono text-slate-700">
-                                                {formatCurrency(history?.actualTillDate || 0)}
-                                            </td>
-
-                                            {/* BE (Curr FY) */}
-                                            <td className="px-2 py-2 text-right font-mono text-slate-700">
-                                                {formatCurrency(history?.currentYearBE || 0)}
-                                            </td>
-
-                                            {/* Allotment (Curr FY) */}
-                                            <td className="px-2 py-2 text-right font-mono text-slate-700">
-                                                {formatCurrency(history?.currentYearBE || 0)}
-                                            </td>
-
-                                            {/* Exp Cutoff */}
-                                            <td className="px-2 py-2 text-right font-mono text-slate-700">
-                                                {formatCurrency(history?.actualTillDate || 0)}
-                                            </td>
-
-                                            {/* Proposed Exp - Editable */}
-                                            <td className="px-1 py-1 bg-blue-50/50">
-                                                <Input
-                                                    type="number"
-                                                    value={data.reviseEstimateCY || ''}
-                                                    onChange={(e) => updateFormData(item.id, 'reviseEstimateCY', parseFloat(e.target.value) || 0)}
-                                                    disabled={isSubmitted}
-                                                    className="h-7 text-xs font-mono border-blue-200 focus:border-blue-400 bg-white text-right"
-                                                    placeholder="0"
-                                                />
-                                            </td>
-
-                                            {/* Total RE - Calculated */}
-                                            <td className="px-2 py-2 text-right font-mono font-semibold text-slate-900">
-                                                {formatCurrency(totalRE)}
-                                            </td>
-
-                                            {/* % RE Over BE */}
-                                            <td className={cn(
-                                                "px-2 py-2 text-right font-mono text-xs",
-                                                reOverBE && parseFloat(reOverBE) < 0 ? "text-red-600" : "text-slate-600"
-                                            )}>
-                                                {reOverBE ? `${reOverBE}%` : '—'}
-                                            </td>
-
-                                            {/* BE1 - Editable */}
-                                            <td className="px-1 py-1 bg-blue-50/50">
-                                                <Input
-                                                    type="number"
-                                                    value={data.budgetEstimateNextYear || ''}
-                                                    onChange={(e) => updateFormData(item.id, 'budgetEstimateNextYear', parseFloat(e.target.value) || 0)}
-                                                    disabled={isSubmitted}
-                                                    className="h-7 text-xs font-mono border-blue-200 focus:border-blue-400 bg-white text-right"
-                                                    placeholder="0"
-                                                />
-                                            </td>
-
-                                            {/* % BE1 Over BE */}
-                                            <td className={cn(
-                                                "px-2 py-2 text-right font-mono text-xs",
-                                                be1OverBE && parseFloat(be1OverBE) < 0 ? "text-red-600" : "text-slate-600"
-                                            )}>
-                                                {be1OverBE ? `${be1OverBE}%` : '—'}
-                                            </td>
-
-                                            {/* BE2 - Editable */}
-                                            <td className="px-1 py-1 bg-blue-50/50">
-                                                <Input
-                                                    type="number"
-                                                    value={data.forwardEstimateY2 || ''}
-                                                    onChange={(e) => updateFormData(item.id, 'forwardEstimateY2', parseFloat(e.target.value) || 0)}
-                                                    disabled={isSubmitted}
-                                                    className="h-7 text-xs font-mono border-blue-200 focus:border-blue-400 bg-white text-right"
-                                                    placeholder="0"
-                                                />
-                                            </td>
-
-                                            {/* BE3 - Editable */}
-                                            <td className="px-1 py-1 bg-blue-50/50">
-                                                <Input
-                                                    type="number"
-                                                    value={data.forwardEstimateY3 || ''}
-                                                    onChange={(e) => updateFormData(item.id, 'forwardEstimateY3', parseFloat(e.target.value) || 0)}
-                                                    disabled={isSubmitted}
-                                                    className="h-7 text-xs font-mono border-blue-200 focus:border-blue-400 bg-white text-right"
-                                                    placeholder="0"
-                                                />
-                                            </td>
-
-                                            {/* Remarks - Editable */}
-                                            <td className="px-1 py-1 bg-blue-50/50">
-                                                <Input
-                                                    type="text"
-                                                    value={data.remarks || ''}
-                                                    onChange={(e) => updateFormData(item.id, 'remarks', e.target.value)}
-                                                    disabled={isSubmitted}
-                                                    className="h-7 text-xs border-blue-200 focus:border-blue-400 bg-white"
-                                                    placeholder="Remarks..."
-                                                />
-                                            </td>
+                                            {displayColumns.map(col => renderCell(col.key))}
                                         </tr>
                                     );
                                 })}
