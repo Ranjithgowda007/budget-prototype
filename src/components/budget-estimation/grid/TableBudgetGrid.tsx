@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { BudgetLineItem, HistoricalData, DDOEstimation } from '@/data/budget-estimation/types';
+import { BudgetLineItem, HistoricalData, EstimationRecord } from '@/data/budget-estimation/types';
 import { formatCurrency, MOCK_HISTORICAL_DATA } from '@/data/budget-estimation/mockData';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -45,10 +45,11 @@ interface ItemFormData {
 interface TableBudgetGridProps {
     role: 'creator' | 'verifier' | 'approver';
     items: BudgetLineItem[];
-    estimations: DDOEstimation[];
+    estimations: EstimationRecord[];
+    viewToggle?: React.ReactNode;
 }
 
-export function TableBudgetGrid({ role, items, estimations }: TableBudgetGridProps) {
+export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableBudgetGridProps) {
     const router = useRouter();
     const [formData, setFormData] = useState<Record<string, ItemFormData>>({});
     const [searchQuery, setSearchQuery] = useState('');
@@ -176,14 +177,19 @@ export function TableBudgetGrid({ role, items, estimations }: TableBudgetGridPro
                                     <span className="text-slate-600 text-sm">Saved</span>
                                 </div>
                             </div>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-2"
-                                onClick={() => router.back()}
-                            >
-                                <ArrowLeft size={16} /> Back
-                            </Button>
+
+                            {/* View Toggle + Back Button */}
+                            <div className="flex items-center gap-3">
+                                {viewToggle}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-2"
+                                    onClick={() => router.back()}
+                                >
+                                    <ArrowLeft size={16} /> Back
+                                </Button>
+                            </div>
                         </div>
                     </div>
 

@@ -36,6 +36,7 @@ interface SmartBudgetGridProps {
     onSave?: (data: any) => void;
     onSubmit?: (data: any) => void;
     summaryCards?: React.ReactNode;
+    viewToggle?: React.ReactNode;
 }
 
 interface ItemFormData {
@@ -53,7 +54,7 @@ interface ItemFormData {
     geographyTag: string;
 }
 
-export function SmartBudgetGrid({ role, items, estimations }: SmartBudgetGridProps) {
+export function SmartBudgetGrid({ role, items, estimations, viewToggle }: SmartBudgetGridProps) {
     const router = useRouter();
 
     // Dynamic Financial Year Calculation
@@ -385,13 +386,18 @@ export function SmartBudgetGrid({ role, items, estimations }: SmartBudgetGridPro
                                     </div>
                                 </div>
                             </div>
-                            <Button
-                                variant="outline"
-                                className="gap-2"
-                                onClick={() => router.back()}
-                            >
-                                <ArrowLeft size={16} /> Back to Dashboard
-                            </Button>
+
+                            {/* View Toggle + Back Button */}
+                            <div className="flex items-center gap-3">
+                                {viewToggle}
+                                <Button
+                                    variant="outline"
+                                    className="gap-2"
+                                    onClick={() => router.back()}
+                                >
+                                    <ArrowLeft size={16} /> Back
+                                </Button>
+                            </div>
                         </div>
                     </div>
 

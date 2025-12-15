@@ -44,41 +44,42 @@ export default function DDOCreatorGridPage() {
         });
     };
 
-    return (
-        <div className="relative">
-            {/* View Toggle - Fixed position */}
-            <div className="fixed top-4 right-6 z-50 bg-white rounded-lg shadow-lg border border-slate-200 p-1 flex gap-1">
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setViewMode('grid')}
-                    className={cn(
-                        "gap-2 px-3",
-                        viewMode === 'grid'
-                            ? "bg-blue-100 text-blue-700 hover:bg-blue-100"
-                            : "text-slate-600 hover:bg-slate-100"
-                    )}
-                >
-                    <LayoutGrid size={16} />
-                    <span className="hidden sm:inline">Card View</span>
-                </Button>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setViewMode('table')}
-                    className={cn(
-                        "gap-2 px-3",
-                        viewMode === 'table'
-                            ? "bg-blue-100 text-blue-700 hover:bg-blue-100"
-                            : "text-slate-600 hover:bg-slate-100"
-                    )}
-                >
-                    <Table2 size={16} />
-                    <span className="hidden sm:inline">Table View</span>
-                </Button>
-            </div>
+    // View toggle component to render inside the header bar
+    const ViewToggle = (
+        <div className="bg-slate-100 rounded-lg p-1 flex gap-1">
+            <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setViewMode('grid')}
+                className={cn(
+                    "gap-2 px-3 h-8",
+                    viewMode === 'grid'
+                        ? "bg-white text-blue-700 shadow-sm hover:bg-white"
+                        : "text-slate-600 hover:bg-slate-200"
+                )}
+            >
+                <LayoutGrid size={16} />
+                <span>Card View</span>
+            </Button>
+            <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setViewMode('table')}
+                className={cn(
+                    "gap-2 px-3 h-8",
+                    viewMode === 'table'
+                        ? "bg-white text-blue-700 shadow-sm hover:bg-white"
+                        : "text-slate-600 hover:bg-slate-200"
+                )}
+            >
+                <Table2 size={16} />
+                <span>Table View</span>
+            </Button>
+        </div>
+    );
 
-            {/* Conditional View Rendering */}
+    return (
+        <>
             {viewMode === 'grid' ? (
                 <SmartBudgetGrid
                     role="creator"
@@ -86,14 +87,16 @@ export default function DDOCreatorGridPage() {
                     estimations={estimations}
                     onSave={handleSave}
                     onSubmit={handleSubmit}
+                    viewToggle={ViewToggle}
                 />
             ) : (
                 <TableBudgetGrid
                     role="creator"
                     items={budgetLines}
                     estimations={estimations}
+                    viewToggle={ViewToggle}
                 />
             )}
-        </div>
+        </>
     );
 }

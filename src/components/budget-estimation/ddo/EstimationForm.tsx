@@ -70,7 +70,7 @@ export function EstimationForm({ estimationId, budgetLineItemId, initialData, mo
 
         if (submit) {
             // Navigate to success page or back to dashboard
-            router.push('/budget/estimation/ddo-creator');
+            router.push('/budget-estimation/ddo-creator/grid');
         }
     };
 
@@ -87,9 +87,9 @@ export function EstimationForm({ estimationId, budgetLineItemId, initialData, mo
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Link href={
-                            userRole === 'verifier' ? '/budget-estimation/ddo-verifier' :
-                                userRole === 'approver' ? '/budget-estimation/ddo-approver' :
-                                    '/budget-estimation/ddo-creator'
+                            userRole === 'verifier' ? '/budget-estimation/ddo-verifier/grid' :
+                                userRole === 'approver' ? '/budget-estimation/ddo-approver/grid' :
+                                    '/budget-estimation/ddo-creator/grid'
                         }>
                             <Button variant="ghost" size="sm" className="gap-2">
                                 <ArrowLeft size={16} />
