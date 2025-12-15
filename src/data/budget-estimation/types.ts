@@ -9,6 +9,7 @@ export interface BudgetLineItem {
     minorHead: string;
     segmentHead: string;
     scheme: string;
+    schemeNomenclature?: string;    // Scheme nomenclature/description
     project?: string;
     chargedOrVoted: 'Charged' | 'Voted';
     objectHead: string;

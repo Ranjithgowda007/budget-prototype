@@ -490,6 +490,14 @@ export function SmartBudgetGrid({ role, items, estimations }: SmartBudgetGridPro
                                                         <h3 className="font-medium text-slate-900 text-base leading-snug truncate">
                                                             {item.scheme}
                                                         </h3>
+                                                        {item.schemeNomenclature && (
+                                                            <>
+                                                                <span className="text-slate-300">|</span>
+                                                                <span className="text-sm font-semibold text-slate-900 truncate max-w-[250px]">
+                                                                    {item.schemeNomenclature}
+                                                                </span>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2">
