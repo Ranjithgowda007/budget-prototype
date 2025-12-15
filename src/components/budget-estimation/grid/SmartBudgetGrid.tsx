@@ -488,7 +488,7 @@ export function SmartBudgetGrid({ role, items, estimations }: SmartBudgetGridPro
                                         {/* Main Estimation Grid */}
                                         <div className="px-5 py-4 bg-white">
                                             {/* Row 1: Display Fields - Non-editable */}
-                                            <div className="grid grid-cols-7 gap-x-4 gap-y-1 pb-3 border-b border-slate-200">
+                                            <div className="grid grid-cols-8 gap-x-4 gap-y-1 pb-3 border-b border-slate-200">
                                                 <div className="flex flex-col">
                                                     <Label className="text-xs text-slate-700 uppercase tracking-wide leading-tight font-medium">Budget Estimate (Prev FY)</Label>
                                                     <p className="text-sm font-semibold text-slate-800 font-mono mt-1 h-8 flex items-center">{formatCurrency(history?.fy1 || 0)}</p>
@@ -506,7 +506,11 @@ export function SmartBudgetGrid({ role, items, estimations }: SmartBudgetGridPro
                                                     <p className="text-sm font-semibold text-slate-800 font-mono mt-1 h-8 flex items-center">{formatCurrency(history?.currentYearBE || 0)}</p>
                                                 </div>
                                                 <div className="flex flex-col">
-                                                    <Label className="text-xs text-slate-700 uppercase tracking-wide leading-tight font-medium">Suppl. Budget (RA+Suppl.)</Label>
+                                                    <Label className="text-xs text-slate-700 uppercase tracking-wide leading-tight font-medium">Reappropriation</Label>
+                                                    <p className="text-sm font-semibold text-slate-800 font-mono mt-1 h-8 flex items-center">₹0</p>
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <Label className="text-xs text-slate-700 uppercase tracking-wide leading-tight font-medium">Supplementary Budget</Label>
                                                     <p className="text-sm font-semibold text-slate-800 font-mono mt-1 h-8 flex items-center">₹0</p>
                                                 </div>
                                                 <div className="flex flex-col">
