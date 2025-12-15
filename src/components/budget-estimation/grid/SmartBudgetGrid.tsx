@@ -91,8 +91,31 @@ export function SmartBudgetGrid({ role, items, estimations }: SmartBudgetGridPro
     const [auditModalOpen, setAuditModalOpen] = useState(false);
     const [activeAuditLine, setActiveAuditLine] = useState<BudgetLineItem | null>(null);
     const [showScrollTop, setShowScrollTop] = useState(false);
+    const [serialSearch, setSerialSearch] = useState('');
     const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
     const mainRef = useRef<HTMLElement | null>(null);
+
+    // Handle serial number change - auto scroll to item
+    const handleSerialChange = (value: string) => {
+        const cleanValue = value.replace(/[^0-9]/g, '');
+        setSerialSearch(cleanValue);
+
+        if (cleanValue) {
+            const targetItem = items.find(item => item.srNo === cleanValue);
+            if (targetItem && cardRefs.current[targetItem.id]) {
+                cardRefs.current[targetItem.id]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Flash highlight effect
+                const card = cardRefs.current[targetItem.id];
+                if (card) {
+                    card.style.boxShadow = '0 0 0 3px #3b82f6';
+                    card.style.transition = 'box-shadow 0.3s ease';
+                    setTimeout(() => {
+                        card.style.boxShadow = '';
+                    }, 2000);
+                }
+            }
+        }
+    };
 
     // Handle scroll to show/hide "Go to Top" button
     const handleScroll = (e: React.UIEvent<HTMLElement>) => {
@@ -299,11 +322,13 @@ export function SmartBudgetGrid({ role, items, estimations }: SmartBudgetGridPro
             const est = estimations.find(e => e.budgetLineItemId === item.id);
             const query = searchQuery.toLowerCase().trim();
 
-            // Search in budget head (primary), scheme name, and object head
+            // Search in budget head (primary), scheme name, object head, serial number, and scheme nomenclature
             const matchesSearch = !query ||
                 item.budgetHead?.toLowerCase().includes(query) ||
                 item.scheme.toLowerCase().includes(query) ||
-                item.objectHead.toLowerCase().includes(query);
+                item.objectHead.toLowerCase().includes(query) ||
+                item.srNo?.toLowerCase().includes(query) ||
+                item.schemeNomenclature?.toLowerCase().includes(query);
 
             const matchesStatus = statusFilter === 'all' || est?.status === statusFilter;
             return matchesSearch && matchesStatus;
@@ -372,6 +397,15 @@ export function SmartBudgetGrid({ role, items, estimations }: SmartBudgetGridPro
 
                     {/* Search & Filter - Fixed */}
                     <div className="flex items-center gap-3 pb-4">
+                        {/* Serial Number Quick Jump - Auto search on input */}
+                        <Input
+                            type="text"
+                            placeholder="Sr. No."
+                            className="w-24 h-12 bg-white border-slate-200 rounded-lg text-center font-mono font-semibold"
+                            value={serialSearch}
+                            onChange={(e) => handleSerialChange(e.target.value)}
+                        />
+                        {/* Main Search Bar */}
                         <div className="relative flex-1">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                             <Input
@@ -445,7 +479,6 @@ export function SmartBudgetGrid({ role, items, estimations }: SmartBudgetGridPro
                             const statusInfo = getStatusInfo(est?.status, item.id);
                             const isSubmitted = submittedItems.has(item.id);
                             const needsBreakup = BREAKUP_REQUIRED_HEADS.some(head => item.detailHead.includes(head.split('/')[1]));
-                            const serialNumber = index + 1;
 
                             // Calculate deviation
                             const deviation = data.budgetEstimateNextYear > 0 && data.reviseEstimateCY > 0
@@ -471,9 +504,9 @@ export function SmartBudgetGrid({ role, items, estimations }: SmartBudgetGridPro
                                         <div className="px-5 py-4 border-b border-slate-100">
                                             <div className="flex items-start justify-between gap-4">
                                                 <div className="flex-1 min-w-0 flex items-center gap-3">
-                                                    {/* Serial Number Badge */}
+                                                    {/* Serial Number Badge - using item.srNo directly */}
                                                     <span className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 text-white text-sm font-bold flex items-center justify-center shadow-sm">
-                                                        {serialNumber}
+                                                        {item.srNo}
                                                     </span>
                                                     {/* Budget Line Code with Charged/Voted and Scheme - All on one line */}
                                                     <div className="flex items-center gap-3 flex-wrap">

@@ -101,7 +101,7 @@ export const MOCK_BUDGET_LINE_ITEMS: BudgetLineItem[] = BUDGET_DATA.map((item, i
     const parsed = parseBudgetHead(item.budgetHead);
     return {
         id: `BL${String(index + 1).padStart(3, '0')}`,
-        srNo: item.srNo,
+        srNo: String(index + 1),  // Sequential numbering from 1
         demandNo: parsed.demand,
         majorHead: parsed.major,
         subMajorHead: parsed.subMajor,
