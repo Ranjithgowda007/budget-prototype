@@ -19,7 +19,8 @@ import {
     CreditCard,
     FileCheck,
     AlertCircle,
-    Award
+    Award,
+    User
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -189,9 +190,10 @@ export function Navbar() {
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                            <Avatar className="h-9 w-9 border border-slate-200">
-                                <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-                                <AvatarFallback>RD</AvatarFallback>
+                            <Avatar className="h-9 w-9 border border-slate-200 bg-slate-100">
+                                <AvatarFallback className="bg-slate-100 text-slate-600">
+                                    <User size={20} />
+                                </AvatarFallback>
                             </Avatar>
                         </Button>
                     </DropdownMenuTrigger>
