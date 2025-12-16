@@ -9,6 +9,8 @@ import { Search, Filter, ArrowLeft, Save, Check, Columns, Eye, EyeOff, Upload, D
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { requiresBreakup } from '@/data/budget-estimation/breakupConfig';
+import { BreakupModal, BreakupItem } from './BreakupModal';
 import {
     Select,
     SelectContent,
@@ -62,6 +64,11 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [savedItems, setSavedItems] = useState<Set<string>>(new Set());
     const [submittedItems, setSubmittedItems] = useState<Set<string>>(new Set());
+
+    // Breakup modal state
+    const [breakupModalOpen, setBreakupModalOpen] = useState(false);
+    const [activeBreakupLine, setActiveBreakupLine] = useState<BudgetLineItem | null>(null);
+    const [breakupData, setBreakupData] = useState<Record<string, BreakupItem[]>>({});
 
     // Column visibility state - all visible by default
     const [visibleColumns, setVisibleColumns] = useState<Set<string>>(new Set([
@@ -195,8 +202,31 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
     // Get visible columns
     const displayColumns = columns.filter(col => visibleColumns.has(col.key));
 
+    // Handle breakup save - update BE1 with total
+    const handleBreakupSave = (items: BreakupItem[], total: number) => {
+        if (activeBreakupLine) {
+            setBreakupData(prev => ({
+                ...prev,
+                [activeBreakupLine.id]: items
+            }));
+            updateFormData(activeBreakupLine.id, 'budgetEstimateNextYear', total);
+        }
+    };
+
     return (
         <div className="h-screen flex flex-col bg-slate-50">
+            {/* Breakup Modal */}
+            {activeBreakupLine && (
+                <BreakupModal
+                    budgetLine={activeBreakupLine}
+                    isOpen={breakupModalOpen}
+                    onOpenChange={setBreakupModalOpen}
+                    onSave={handleBreakupSave}
+                    initialData={breakupData[activeBreakupLine.id]}
+                    isReadOnly={submittedItems.has(activeBreakupLine.id)}
+                />
+            )}
+
             {/* Fixed Header Section */}
             <header className="flex-shrink-0 bg-slate-50 px-4 pt-2">
                 <div className="max-w-full mx-auto">
@@ -458,6 +488,24 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
                                             case 'reOverBE':
                                                 return <td key={colKey} className={cn("px-2 py-2 text-right font-mono text-xs", reOverBE && parseFloat(reOverBE) < 0 ? "text-red-600" : "text-slate-600")}>{reOverBE ? `${reOverBE}%` : '—'}</td>;
                                             case 'be1':
+                                                // Check if this item requires breakup
+                                                if (requiresBreakup(item.objectHead, item.detailHead)) {
+                                                    return (
+                                                        <td key={colKey} className="px-1 py-1 bg-blue-50/50">
+                                                            <div
+                                                                onClick={() => !isSubmitted && (() => { setActiveBreakupLine(item); setBreakupModalOpen(true); })()}
+                                                                className={cn(
+                                                                    "h-7 px-2 text-xs font-mono border rounded flex items-center justify-end cursor-pointer transition-all",
+                                                                    isSubmitted
+                                                                        ? "bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed"
+                                                                        : "bg-white border-blue-200 text-blue-700 hover:border-blue-400 hover:bg-blue-50"
+                                                                )}
+                                                            >
+                                                                {data.budgetEstimateNextYear > 0 ? formatCurrency(data.budgetEstimateNextYear) : "Add →"}
+                                                            </div>
+                                                        </td>
+                                                    );
+                                                }
                                                 return <td key={colKey} className="px-1 py-1 bg-blue-50/50"><Input type="number" value={data.budgetEstimateNextYear || ''} onChange={(e) => updateFormData(item.id, 'budgetEstimateNextYear', parseFloat(e.target.value) || 0)} disabled={isSubmitted} className="h-7 text-xs font-mono border-blue-200 focus:border-blue-400 bg-white text-right" placeholder="0" /></td>;
                                             case 'be1OverBE':
                                                 return <td key={colKey} className={cn("px-2 py-2 text-right font-mono text-xs", be1OverBE && parseFloat(be1OverBE) < 0 ? "text-red-600" : "text-slate-600")}>{be1OverBE ? `${be1OverBE}%` : '—'}</td>;

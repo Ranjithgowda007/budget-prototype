@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { BudgetLineItem, EstimationRecord, TypedAsset, AuditTrailEntry } from '@/data/budget-estimation/types';
 import { formatCurrency, MOCK_HISTORICAL_DATA, getAuditTrailByBudgetLineId, MOCK_AUDIT_TRAIL } from '@/data/budget-estimation/mockData';
+import { requiresBreakup } from '@/data/budget-estimation/breakupConfig';
 import { useRouter } from 'next/navigation';
 import { BreakupModal, BREAKUP_REQUIRED_HEADS, BreakupItem } from './BreakupModal';
 import { TrendAnalysisPopup } from './TrendAnalysisPopup';
@@ -258,12 +259,14 @@ export function SmartBudgetGrid({ role, items, estimations, viewToggle }: SmartB
         setBreakupModalOpen(true);
     };
 
-    const handleBreakupSave = (items: BreakupItem[]) => {
+    const handleBreakupSave = (items: BreakupItem[], total: number) => {
         if (activeBreakupLine) {
             setBreakupData(prev => ({
                 ...prev,
                 [activeBreakupLine.id]: items
             }));
+            // Update BE1 field with the calculated total from breakup
+            updateFormData(activeBreakupLine.id, 'budgetEstimateNextYear', total);
         }
     };
 
@@ -715,17 +718,35 @@ export function SmartBudgetGrid({ role, items, estimations, viewToggle }: SmartB
                                                                     : '—'}
                                                             </p>
                                                         </div>
-                                                        {/* Editable Field */}
+                                                        {/* Editable Field - BE1 */}
                                                         <div className="flex flex-col">
                                                             <Label className="text-xs text-blue-900 font-semibold uppercase tracking-wide leading-tight">BE {FY.next} (BE1) *</Label>
-                                                            <Input
-                                                                type="number"
-                                                                value={data.budgetEstimateNextYear || ''}
-                                                                onChange={(e) => updateFormData(item.id, 'budgetEstimateNextYear', parseFloat(e.target.value) || 0)}
-                                                                placeholder="0"
-                                                                disabled={isSubmitted}
-                                                                className="h-8 font-mono text-sm border-blue-300 focus:border-blue-500 focus:ring-blue-200 bg-blue-50 mt-1"
-                                                            />
+                                                            {requiresBreakup(item.objectHead, item.detailHead) ? (
+                                                                // Breakup-required items: Show clickable field that opens popup
+                                                                <div
+                                                                    onClick={() => !isSubmitted && handleBreakupClick(item)}
+                                                                    className={cn(
+                                                                        "h-8 px-3 font-mono text-sm border rounded-md mt-1 flex items-center cursor-pointer transition-all",
+                                                                        isSubmitted
+                                                                            ? "bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed"
+                                                                            : "bg-blue-50 border-blue-300 text-blue-700 hover:border-blue-400 hover:bg-blue-100"
+                                                                    )}
+                                                                >
+                                                                    {data.budgetEstimateNextYear > 0
+                                                                        ? formatCurrency(data.budgetEstimateNextYear)
+                                                                        : "Add breakup →"}
+                                                                </div>
+                                                            ) : (
+                                                                // Non-breakup items: Normal editable input
+                                                                <Input
+                                                                    type="number"
+                                                                    value={data.budgetEstimateNextYear || ''}
+                                                                    onChange={(e) => updateFormData(item.id, 'budgetEstimateNextYear', parseFloat(e.target.value) || 0)}
+                                                                    placeholder="0"
+                                                                    disabled={isSubmitted}
+                                                                    className="h-8 font-mono text-sm border-blue-300 focus:border-blue-500 focus:ring-blue-200 bg-blue-50 mt-1"
+                                                                />
+                                                            )}
                                                         </div>
                                                         {/* Calculated Field */}
                                                         <div className="flex flex-col">
