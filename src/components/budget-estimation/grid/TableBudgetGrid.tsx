@@ -5,7 +5,7 @@ import { BudgetLineItem, HistoricalData, EstimationRecord } from '@/data/budget-
 import { formatCurrency, MOCK_HISTORICAL_DATA } from '@/data/budget-estimation/mockData';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, ArrowLeft, Save, Check, Columns, Eye, EyeOff, Upload, Download } from 'lucide-react';
+import { Search, Filter, ArrowLeft, Save, Check, Columns, Eye, EyeOff, Upload, Download, RotateCcw, ArrowRight, CheckCircle2, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -112,6 +112,13 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
         });
     }, [items, estimations, searchQuery, statusFilter]);
 
+    // Count returned items
+    const returnedCount = estimations.filter(est => est.status === 'returned').length;
+    // Count completed items (saved + submitted)
+    const completedCount = savedItems.size + submittedItems.size;
+    // Pending items = total - completed - returned
+    const pendingCount = items.length - completedCount - returnedCount;
+
     const handleSaveAll = () => {
         const itemsWithData = Object.keys(formData).filter(id =>
             formData[id].reviseEstimateCY > 0 || formData[id].budgetEstimateNextYear > 0
@@ -197,29 +204,37 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 mb-3">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-6">
-                                <div className="flex items-center gap-2">
-                                    <div className="h-8 w-8 rounded-lg bg-amber-100 flex items-center justify-center">
-                                        <span className="text-amber-600 font-bold text-sm">
-                                            {items.length}
-                                        </span>
+                                {/* Pending Card */}
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                                        <Clock className="text-amber-600" size={20} />
                                     </div>
-                                    <span className="text-slate-600 text-sm">Total Items</span>
+                                    <div>
+                                        <p className="text-xs text-slate-500 uppercase font-medium">Pending</p>
+                                        <p className="text-xl font-bold text-slate-900">{pendingCount}</p>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="h-8 w-8 rounded-lg bg-green-100 flex items-center justify-center">
-                                        <span className="text-green-600 font-bold text-sm">
-                                            {submittedItems.size}
-                                        </span>
+                                <div className="w-px h-10 bg-slate-200" />
+                                {/* Completed Card */}
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+                                        <CheckCircle2 className="text-emerald-600" size={20} />
                                     </div>
-                                    <span className="text-slate-600 text-sm">Submitted</span>
+                                    <div>
+                                        <p className="text-xs text-slate-500 uppercase font-medium">Completed</p>
+                                        <p className="text-xl font-bold text-slate-900">{completedCount}</p>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="h-8 w-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                                        <span className="text-blue-600 font-bold text-sm">
-                                            {savedItems.size}
-                                        </span>
+                                <div className="w-px h-10 bg-slate-200" />
+                                {/* Returned Card */}
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-xl bg-orange-100 flex items-center justify-center">
+                                        <RotateCcw className="text-orange-600" size={20} />
                                     </div>
-                                    <span className="text-slate-600 text-sm">Saved</span>
+                                    <div>
+                                        <p className="text-xs text-slate-500 uppercase font-medium">Returned</p>
+                                        <p className="text-xl font-bold text-slate-900">{returnedCount}</p>
+                                    </div>
                                 </div>
                             </div>
 
@@ -484,6 +499,94 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
                     </div>
                 </div>
             </main>
+
+            {/* Footer for Creator role */}
+            {role === 'creator' && (
+                <footer className="flex-shrink-0 bg-white border border-slate-200 mx-4 mb-4 px-4 py-3 shadow-lg rounded-xl z-40">
+                    <div className="max-w-full mx-auto flex items-center justify-between">
+                        <div className="text-sm text-slate-600">
+                            <span className="font-semibold text-slate-900">{submittedItems.size}</span>
+                            <span className="text-slate-400"> / </span>
+                            <span>{items.length}</span>
+                            <span className="ml-1">budget lines filled</span>
+                        </div>
+                        <Button
+                            size="sm"
+                            className="gap-2 h-10 bg-blue-600 hover:bg-blue-700"
+                            onClick={handleSubmitAll}
+                        >
+                            <ArrowRight size={14} />
+                            Submit All to Verifier
+                        </Button>
+                    </div>
+                </footer>
+            )}
+
+            {/* Footer for Verifier role */}
+            {role === 'verifier' && (
+                <footer className="flex-shrink-0 bg-white border border-slate-200 mx-4 mb-4 px-4 py-3 shadow-lg rounded-xl z-40">
+                    <div className="max-w-full mx-auto flex items-center justify-between">
+                        <div className="text-sm text-slate-600">
+                            <span className="font-semibold text-slate-900">{submittedItems.size}</span>
+                            <span className="text-slate-400"> / </span>
+                            <span>{items.length}</span>
+                            <span className="ml-1">budget lines reviewed</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-2 h-10 border-orange-300 text-orange-600 hover:bg-orange-50"
+                                onClick={() => toast.info('Return to Creator', { description: 'Items will be returned for corrections' })}
+                            >
+                                <RotateCcw size={14} />
+                                Return to Creator
+                            </Button>
+                            <Button
+                                size="sm"
+                                className="gap-2 h-10 bg-blue-600 hover:bg-blue-700"
+                                onClick={handleSubmitAll}
+                            >
+                                <ArrowRight size={14} />
+                                Forward to Approver
+                            </Button>
+                        </div>
+                    </div>
+                </footer>
+            )}
+
+            {/* Footer for Approver role */}
+            {role === 'approver' && (
+                <footer className="flex-shrink-0 bg-white border border-slate-200 mx-4 mb-4 px-4 py-3 shadow-lg rounded-xl z-40">
+                    <div className="max-w-full mx-auto flex items-center justify-between">
+                        <div className="text-sm text-slate-600">
+                            <span className="font-semibold text-slate-900">{submittedItems.size}</span>
+                            <span className="text-slate-400"> / </span>
+                            <span>{items.length}</span>
+                            <span className="ml-1">budget lines reviewed</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-2 h-10 border-orange-300 text-orange-600 hover:bg-orange-50"
+                                onClick={() => toast.info('Return to Verifier', { description: 'Items will be returned for corrections' })}
+                            >
+                                <RotateCcw size={14} />
+                                Return to Verifier
+                            </Button>
+                            <Button
+                                size="sm"
+                                className="gap-2 h-10 bg-emerald-600 hover:bg-emerald-700"
+                                onClick={handleSubmitAll}
+                            >
+                                <CheckCircle2 size={14} />
+                                Approve & Send to BCO
+                            </Button>
+                        </div>
+                    </div>
+                </footer>
+            )}
         </div>
     );
 }

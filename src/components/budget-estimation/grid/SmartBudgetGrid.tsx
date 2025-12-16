@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import {
     ArrowLeft, ArrowUp, Save, Send, Search, Filter, Clock, CheckCircle2, AlertCircle,
     TrendingUp, TrendingDown, Layers, Check, ChevronDown, ChevronUp, Target,
-    FileText, AlertTriangle, Sparkles, Package, History
+    FileText, AlertTriangle, Sparkles, Package, History, RotateCcw, ArrowRight
 } from 'lucide-react';
 import { BudgetLineItem, EstimationRecord, TypedAsset, AuditTrailEntry } from '@/data/budget-estimation/types';
 import { formatCurrency, MOCK_HISTORICAL_DATA, getAuditTrailByBudgetLineId, MOCK_AUDIT_TRAIL } from '@/data/budget-estimation/mockData';
@@ -361,7 +361,9 @@ export function SmartBudgetGrid({ role, items, estimations, viewToggle }: SmartB
     }, [items, estimations, searchQuery, statusFilter]);
 
     const completedCount = savedItems.size + submittedItems.size;
-    const pendingCount = items.length - completedCount;
+    // Count items that have been returned for correction
+    const returnedCount = estimations.filter(est => est.status === 'returned').length;
+    const pendingCount = items.length - completedCount - returnedCount;
     const totalProposedRE = items.reduce((acc, item) => {
         const data = getItemFormData(item.id);
         return acc + (data.reviseEstimateCY || 0);
@@ -396,9 +398,20 @@ export function SmartBudgetGrid({ role, items, estimations, viewToggle }: SmartB
                                     </div>
                                 </div>
                                 <div className="w-px h-10 bg-slate-200" />
+                                {/* Returned Status Card */}
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-xl bg-orange-100 flex items-center justify-center">
+                                        <RotateCcw className="text-orange-600" size={20} />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-slate-500 uppercase font-medium">Returned</p>
+                                        <p className="text-xl font-bold text-slate-900">{returnedCount}</p>
+                                    </div>
+                                </div>
+                                <div className="w-px h-10 bg-slate-200" />
                                 {/* Progress Bar */}
-                                <div className="flex-1 max-w-xs pl-4">
-                                    <div className="flex items-center justify-between gap-4 mb-1">
+                                <div className="flex-1 max-w-xs">
+                                    <div className="flex items-center justify-between mb-1">
                                         <p className="text-xs text-slate-500 uppercase font-medium">Progress</p>
                                         <p className="text-sm font-semibold text-slate-700">{getFilledCount()}/{items.length}</p>
                                     </div>
@@ -1052,18 +1065,33 @@ export function SmartBudgetGrid({ role, items, estimations, viewToggle }: SmartB
                                 <span className="font-semibold text-slate-900">{getFilledCount()}</span>
                                 <span className="text-slate-400"> / </span>
                                 <span>{items.length}</span>
-                                <span className="ml-1">budget lines filled</span>
+                                <span className="ml-1">budget lines reviewed</span>
                             </div>
                         </div>
-                        <Button
-                            size="lg"
-                            className="gap-2 bg-blue-600 hover:bg-blue-700 px-6"
-                            onClick={handleBatchSubmit}
-                            disabled={submittedItems.size === items.length}
-                        >
-                            <Send size={18} />
-                            {submittedItems.size === items.length ? 'All Submitted' : 'Submit All to Approver'}
-                        </Button>
+                        <div className="flex items-center gap-3">
+                            <Button
+                                size="lg"
+                                variant="outline"
+                                className="gap-2 border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-400 px-6"
+                                onClick={() => {
+                                    toast.info('Return to Creator', {
+                                        description: 'Items will be returned to DDO Creator for corrections'
+                                    });
+                                }}
+                            >
+                                <RotateCcw size={18} />
+                                Return to Creator
+                            </Button>
+                            <Button
+                                size="lg"
+                                className="gap-2 bg-blue-600 hover:bg-blue-700 px-6"
+                                onClick={handleBatchSubmit}
+                                disabled={submittedItems.size === items.length}
+                            >
+                                <ArrowRight size={18} />
+                                {submittedItems.size === items.length ? 'All Forwarded' : 'Forward to Approver'}
+                            </Button>
+                        </div>
                     </div>
                 </footer>
             )}
@@ -1077,18 +1105,33 @@ export function SmartBudgetGrid({ role, items, estimations, viewToggle }: SmartB
                                 <span className="font-semibold text-slate-900">{getFilledCount()}</span>
                                 <span className="text-slate-400"> / </span>
                                 <span>{items.length}</span>
-                                <span className="ml-1">budget lines filled</span>
+                                <span className="ml-1">budget lines reviewed</span>
                             </div>
                         </div>
-                        <Button
-                            size="lg"
-                            className="gap-2 bg-emerald-600 hover:bg-emerald-700 px-6"
-                            onClick={handleBatchSubmit}
-                            disabled={submittedItems.size === items.length}
-                        >
-                            <CheckCircle2 size={18} />
-                            {submittedItems.size === items.length ? 'All Approved' : 'Approve All'}
-                        </Button>
+                        <div className="flex items-center gap-3">
+                            <Button
+                                size="lg"
+                                variant="outline"
+                                className="gap-2 border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-400 px-6"
+                                onClick={() => {
+                                    toast.info('Return to Verifier', {
+                                        description: 'Items will be returned to DDO Verifier for corrections'
+                                    });
+                                }}
+                            >
+                                <RotateCcw size={18} />
+                                Return to Verifier
+                            </Button>
+                            <Button
+                                size="lg"
+                                className="gap-2 bg-emerald-600 hover:bg-emerald-700 px-6"
+                                onClick={handleBatchSubmit}
+                                disabled={submittedItems.size === items.length}
+                            >
+                                <CheckCircle2 size={18} />
+                                {submittedItems.size === items.length ? 'All Approved' : 'Approve & Send to BCO'}
+                            </Button>
+                        </div>
                     </div>
                 </footer>
             )}
