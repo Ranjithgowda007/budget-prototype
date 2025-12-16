@@ -402,15 +402,6 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
                         >
                             <Save size={14} /> Save All
                         </Button>
-                        {role === 'creator' && (
-                            <Button
-                                size="sm"
-                                className="gap-2 h-10 bg-blue-600 hover:bg-blue-700"
-                                onClick={handleSubmitAll}
-                            >
-                                <Check size={14} /> Submit All
-                            </Button>
-                        )}
                     </div>
                 </div>
             </header>
