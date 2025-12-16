@@ -9,7 +9,7 @@ import { LayoutGrid, Table2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-export default function DDOCreatorGridPage() {
+export default function DDOCreatorPage() {
     const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
     const budgetLines = MOCK_BUDGET_LINE_ITEMS;
 

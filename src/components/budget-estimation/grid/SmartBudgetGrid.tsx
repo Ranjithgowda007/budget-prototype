@@ -397,8 +397,8 @@ export function SmartBudgetGrid({ role, items, estimations, viewToggle }: SmartB
                                 </div>
                                 <div className="w-px h-10 bg-slate-200" />
                                 {/* Progress Bar */}
-                                <div className="flex-1 max-w-xs">
-                                    <div className="flex items-center justify-between mb-1">
+                                <div className="flex-1 max-w-xs pl-4">
+                                    <div className="flex items-center justify-between gap-4 mb-1">
                                         <p className="text-xs text-slate-500 uppercase font-medium">Progress</p>
                                         <p className="text-sm font-semibold text-slate-700">{getFilledCount()}/{items.length}</p>
                                     </div>
