@@ -70,7 +70,7 @@ export function EstimationForm({ estimationId, budgetLineItemId, initialData, mo
 
         if (submit) {
             // Navigate to success page or back to dashboard
-            router.push('/budget-expenditure/ddo-creator/grid');
+            router.push('/budget/budget-expenditure/ddo-creator/grid');
         }
     };
 
@@ -87,9 +87,9 @@ export function EstimationForm({ estimationId, budgetLineItemId, initialData, mo
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Link href={
-                            userRole === 'verifier' ? '/budget-expenditure/ddo-verifier/grid' :
-                                userRole === 'approver' ? '/budget-expenditure/ddo-approver/grid' :
-                                    '/budget-expenditure/ddo-creator/grid'
+                            userRole === 'verifier' ? '/budget/budget-expenditure/ddo-verifier/grid' :
+                                userRole === 'approver' ? '/budget/budget-expenditure/ddo-approver/grid' :
+                                    '/budget/budget-expenditure/ddo-creator/grid'
                         }>
                             <Button variant="ghost" size="sm" className="gap-2">
                                 <ArrowLeft size={16} />
@@ -143,7 +143,7 @@ export function EstimationForm({ estimationId, budgetLineItemId, initialData, mo
                                 <Button
                                     variant="outline"
                                     className="gap-2 text-orange-600 border-orange-300  hover:bg-orange-50"
-                                    onClick={() => router.push('/budget-expenditure/ddo-verifier')}
+                                    onClick={() => router.push('/budget/budget-expenditure/ddo-verifier')}
                                 >
                                     Return to Creator
                                 </Button>
@@ -170,7 +170,7 @@ export function EstimationForm({ estimationId, budgetLineItemId, initialData, mo
                                 <Button
                                     variant="outline"
                                     className="gap-2 text-orange-600 border-orange-300 hover:bg-orange-50"
-                                    onClick={() => router.push('/budget-expenditure/ddo-approver')}
+                                    onClick={() => router.push('/budget/budget-expenditure/ddo-approver')}
                                 >
                                     Return to Verifier
                                 </Button>

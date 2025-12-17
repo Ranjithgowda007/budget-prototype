@@ -135,9 +135,9 @@ export function getRoleDisplayName(role: Role): string {
 // Helper to get role route
 export function getRoleRoute(role: Role): string {
     switch (role) {
-        case 'creator': return '/budget-expenditure/ddo-creator';
-        case 'verifier': return '/budget-expenditure/ddo-verifier';
-        case 'approver': return '/budget-expenditure/ddo-approver';
-        default: return '/budget-expenditure/ddo-creator';
+        case 'creator': return '/budget/budget-expenditure/ddo-creator';
+        case 'verifier': return '/budget/budget-expenditure/ddo-verifier';
+        case 'approver': return '/budget/budget-expenditure/ddo-approver';
+        default: return '/budget/budget-expenditure/ddo-creator';
     }
 }

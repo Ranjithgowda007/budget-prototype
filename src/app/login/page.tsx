@@ -41,7 +41,7 @@ export default function LoginPage() {
     // Redirect if already authenticated
     useEffect(() => {
         if (isAuthenticated && activeRole) {
-            router.push(getRoleRoute(activeRole));
+            router.push('/dashboard');
         }
     }, [isAuthenticated, activeRole, router]);
 

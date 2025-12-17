@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import {
     ArrowLeft, ArrowUp, Save, Send, Search, Filter, Clock, CheckCircle2, AlertCircle,
     TrendingUp, TrendingDown, Layers, Check, ChevronDown, ChevronUp, Target,
-    FileText, AlertTriangle, Sparkles, Package, History, RotateCcw, ArrowRight
+    FileText, AlertTriangle, Sparkles, Package, History, RotateCcw, ArrowRight, Upload
 } from 'lucide-react';
 import { BudgetLineItem, EstimationRecord, TypedAsset, AuditTrailEntry } from '@/data/budget-expenditure/types';
 import { formatCurrency, MOCK_HISTORICAL_DATA, getAuditTrailByBudgetLineId, MOCK_AUDIT_TRAIL } from '@/data/budget-expenditure/mockData';
@@ -832,6 +832,37 @@ export function SmartBudgetGrid({ role, items, estimations, viewToggle }: SmartB
                                                         />
                                                     </div>
 
+                                                    {/* Attachment Section */}
+                                                    <div className="pt-3">
+                                                        <Label className="text-xs text-blue-900 font-semibold uppercase tracking-wide">Attachments</Label>
+                                                        <div className="mt-1 flex items-center gap-3">
+                                                            <label className={cn(
+                                                                "flex items-center gap-2 px-4 py-2 border border-dashed rounded-lg cursor-pointer transition-all",
+                                                                isSubmitted
+                                                                    ? "border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed"
+                                                                    : "border-blue-300 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:border-blue-400"
+                                                            )}>
+                                                                <Upload size={16} />
+                                                                <span className="text-sm font-medium">Upload File</span>
+                                                                <input
+                                                                    type="file"
+                                                                    className="hidden"
+                                                                    disabled={isSubmitted}
+                                                                    multiple
+                                                                    accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                                                                    onChange={(e) => {
+                                                                        if (e.target.files && e.target.files.length > 0) {
+                                                                            toast.success(`${e.target.files.length} file(s) selected`, {
+                                                                                description: 'Files will be uploaded on save'
+                                                                            });
+                                                                        }
+                                                                    }}
+                                                                />
+                                                            </label>
+                                                            <span className="text-xs text-slate-500">PDF, DOC, XLS, JPG, PNG (Max 5MB)</span>
+                                                        </div>
+                                                    </div>
+
                                                     {/* Actions Row - Separate line */}
                                                     <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-slate-200">
                                                         <Button
@@ -842,21 +873,6 @@ export function SmartBudgetGrid({ role, items, estimations, viewToggle }: SmartB
                                                         >
                                                             <History size={14} />
                                                             Audit Trail
-                                                        </Button>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="h-9 gap-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50"
-                                                            onClick={() => handleAssetClick(item)}
-                                                            disabled={isSubmitted}
-                                                        >
-                                                            <Package size={14} />
-                                                            Assets
-                                                            {assetData[item.id]?.length > 0 && (
-                                                                <span className="text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full">
-                                                                    {assetData[item.id].length}
-                                                                </span>
-                                                            )}
                                                         </Button>
                                                         <Button
                                                             variant="outline"

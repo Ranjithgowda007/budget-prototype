@@ -108,7 +108,7 @@ export function BCODashboard() {
                                             </p>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <Link href={`/budget-expenditure/bco-creator/review/${estimation.id}`}>
+                                            <Link href={`/budget/budget-expenditure/bco-creator/review/${estimation.id}`}>
                                                 <Button variant="ghost" size="sm">Review</Button>
                                             </Link>
                                         </td>

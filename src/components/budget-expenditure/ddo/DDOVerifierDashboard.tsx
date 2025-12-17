@@ -51,7 +51,7 @@ export function DDOVerifierDashboard() {
                     <h1 className="text-3xl font-bold text-slate-900">DDO Verifier - Budget Estimation</h1>
                     <p className="text-slate-500 mt-1">Review and verify budget estimations</p>
                 </div>
-                <Link href="/budget-expenditure/ddo-verifier/grid">
+                <Link href="/budget/budget-expenditure/ddo-verifier/grid">
                     <Button variant="outline" className="gap-2">
                         <FileText size={20} />
                         Switch to Grid View
@@ -137,7 +137,7 @@ export function DDOVerifierDashboard() {
                                             </p>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <Link href={`/budget-expenditure/ddo-verifier/review/${estimation.id}`}>
+                                            <Link href={`/budget/budget-expenditure/ddo-verifier/review/${estimation.id}`}>
                                                 <Button size="sm">Review</Button>
                                             </Link>
                                         </td>

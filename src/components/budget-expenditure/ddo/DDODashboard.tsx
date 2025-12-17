@@ -59,7 +59,7 @@ export function DDODashboard() {
                     <p className="text-slate-500 mt-1">Create and manage budget estimations</p>
                 </div>
                 <div className="flex gap-3">
-                    <Link href="/budget-expenditure/ddo-creator/grid">
+                    <Link href="/budget/budget-expenditure/ddo-creator/grid">
                         <Button className="gap-2 shadow-lg shadow-blue-200">
                             <FileText size={20} />
                             Open Grid View
@@ -146,7 +146,7 @@ export function DDODashboard() {
                                             </p>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <Link href="/budget-expenditure/ddo-creator/grid">
+                                            <Link href="/budget/budget-expenditure/ddo-creator/grid">
                                                 <Button variant="ghost" size="sm">View</Button>
                                             </Link>
                                         </td>

@@ -41,15 +41,15 @@ export const MODULE_NAVIGATION: Record<string, SidebarItem[]> = {
             id: 'budget-estimate',
             label: 'Budget Estimation',
             icon: 'PieChart',
-            path: '/budget-expenditure',
+            path: '/budget/budget-expenditure',
             subItems: [
-                { id: 'receipt-budget', label: 'Receipt Budget', icon: 'FileText', path: '/budget-expenditure/receipt-budget' },
-                { id: 'budget-expenditure', label: 'Budget Expenditure', icon: 'FileText', path: '/budget-expenditure' },
-                { id: 'public-account', label: 'Public Account', icon: 'Landmark', path: '/budget-expenditure/public-account' },
-                { id: 'salary-head-deviation', label: 'Salary Head Deviation Report', icon: 'FileText', path: '/budget-expenditure/salary-deviation' },
-                { id: 'scheme-sub-plan', label: 'Scheme Sub-Plan Draft Report - BCO', icon: 'FileText', path: '/budget-expenditure/scheme-sub-plan' },
-                { id: 'draft-est-tracking', label: 'Draft Estimate Tracking Report - BCO', icon: 'FileText', path: '/budget-expenditure/draft-tracking' },
-                { id: 'obj-head-wise', label: 'Object Head Wise Report - BCO', icon: 'FileText', path: '/budget-expenditure/obj-head-wise' },
+                { id: 'receipt-budget', label: 'Receipt Budget', icon: 'FileText', path: '/budget/budget-expenditure/receipt-budget' },
+                { id: 'budget-expenditure', label: 'Budget Expenditure', icon: 'FileText', path: '/budget/budget-expenditure' },
+                { id: 'public-account', label: 'Public Account', icon: 'Landmark', path: '/budget/budget-expenditure/public-account' },
+                { id: 'salary-head-deviation', label: 'Salary Head Deviation Report', icon: 'FileText', path: '/budget/budget-expenditure/salary-deviation' },
+                { id: 'scheme-sub-plan', label: 'Scheme Sub-Plan Draft Report - BCO', icon: 'FileText', path: '/budget/budget-expenditure/scheme-sub-plan' },
+                { id: 'draft-est-tracking', label: 'Draft Estimate Tracking Report - BCO', icon: 'FileText', path: '/budget/budget-expenditure/draft-tracking' },
+                { id: 'obj-head-wise', label: 'Object Head Wise Report - BCO', icon: 'FileText', path: '/budget/budget-expenditure/obj-head-wise' },
             ]
         },
         {
