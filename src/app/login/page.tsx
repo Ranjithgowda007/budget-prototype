@@ -11,7 +11,6 @@ import { useRouter } from 'next/navigation';
 // Slider images
 const SLIDER_IMAGES = [
     '/login-screen/1.png',
-    '/login-screen/2.png',
     '/login-screen/3.png',
 ];
 

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
     ChevronRight,
+    ChevronLeft,
     ChevronDown,
     Landmark,
     LogOut,
@@ -27,7 +28,9 @@ import {
     Award,
     UserCheck,
     ShoppingCart,
-    HardDrive
+    HardDrive,
+    PanelLeftClose,
+    PanelLeft
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -42,6 +45,7 @@ import {
 
 export function Sidebar({ items = [] }: { items?: SidebarItem[] }) {
     const [isHovered, setIsHovered] = useState(false);
+    const [isPinned, setIsPinned] = useState(false); // User can pin sidebar open
     const [searchQuery, setSearchQuery] = useState('');
 
     // Filter navigation items based on search query
@@ -76,8 +80,8 @@ export function Sidebar({ items = [] }: { items?: SidebarItem[] }) {
         return items.map(filterItem).filter((item): item is SidebarItem => item !== null);
     }, [searchQuery, items]);
 
-    // Auto-expand sidebar when searching
-    const isExpanded = isHovered || searchQuery.length > 0;
+    // Sidebar is expanded if pinned, hovered, or searching
+    const isExpanded = isPinned || isHovered || searchQuery.length > 0;
 
     return (
         <aside
@@ -86,19 +90,21 @@ export function Sidebar({ items = [] }: { items?: SidebarItem[] }) {
                 isExpanded ? "w-80" : "w-16"
             )}
             onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => {
-                setIsHovered(false);
-                // Optional: clear search on leave? No, user might want to keep it.
-                // But we need to handle the width. If search is active, we keep it expanded?
-                // Or just let it collapse and hide search input content.
-                // Let's stick to the hover logic for width to avoid layout shifts when not interacting.
-                // Actually, if I type, I am hovering. So it stays expanded.
-            }}
+            onMouseLeave={() => setIsHovered(false)}
         >
-            {/* Logo Area */}
-            <div className="h-16 flex items-center justify-center border-b border-slate-100 min-h-[4rem]">
-                <div className="flex items-center gap-3 overflow-hidden whitespace-nowrap px-4 w-full">
-                    <div className="shrink-0 w-9 h-9 relative">
+            {/* Logo Area with Toggle Button */}
+            <div className={cn(
+                "h-16 flex items-center border-b border-slate-100 min-h-[4rem] transition-all duration-300",
+                isExpanded ? "justify-between px-3" : "justify-center px-2"
+            )}>
+                <div className={cn(
+                    "flex items-center overflow-hidden whitespace-nowrap transition-all duration-300",
+                    isExpanded ? "gap-3" : "gap-0"
+                )}>
+                    <div className={cn(
+                        "shrink-0 relative transition-all duration-300",
+                        isExpanded ? "w-9 h-9" : "w-8 h-8"
+                    )}>
                         <Image
                             src="/logo.png"
                             alt="Logo"
@@ -107,12 +113,31 @@ export function Sidebar({ items = [] }: { items?: SidebarItem[] }) {
                         />
                     </div>
                     <span className={cn(
-                        "font-bold text-lg text-slate-800 transition-opacity duration-200",
-                        isExpanded ? "opacity-100" : "opacity-0"
+                        "font-bold text-lg text-slate-800 transition-all duration-300",
+                        isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"
                     )}>
                         IFMIS MP
                     </span>
                 </div>
+                {/* Toggle Pin Button - only visible when expanded */}
+                {isExpanded && (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setIsPinned(!isPinned)}
+                        className={cn(
+                            "shrink-0 h-8 w-8 transition-all duration-200",
+                            isPinned ? "text-blue-600 bg-blue-50 hover:bg-blue-100" : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                        )}
+                        title={isPinned ? "Collapse sidebar" : "Expand sidebar"}
+                    >
+                        {isPinned ? (
+                            <PanelLeftClose size={18} />
+                        ) : (
+                            <PanelLeft size={18} />
+                        )}
+                    </Button>
+                )}
             </div>
 
             {/* Search Bar */}
