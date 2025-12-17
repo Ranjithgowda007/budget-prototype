@@ -4,9 +4,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Eye, EyeOff, RefreshCw, Lock, User, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, EyeOff, RefreshCw, Lock, User, ChevronLeft, ChevronRight, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { useAuth, getRoleRoute } from '@/context/AuthContext';
+import { DUMMY_USERS } from '@/data/users';
 
 // Slider images
 const SLIDER_IMAGES = [
@@ -26,6 +28,7 @@ const generateCaptcha = (): string => {
 
 export default function LoginPage() {
     const router = useRouter();
+    const { login, isAuthenticated, activeRole } = useAuth();
     const [userId, setUserId] = useState('');
     const [password, setPassword] = useState('');
     const [captchaInput, setCaptchaInput] = useState('');
@@ -33,6 +36,14 @@ export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [activeSlide, setActiveSlide] = useState(0);
+    const [showHints, setShowHints] = useState(false);
+
+    // Redirect if already authenticated
+    useEffect(() => {
+        if (isAuthenticated && activeRole) {
+            router.push(getRoleRoute(activeRole));
+        }
+    }, [isAuthenticated, activeRole, router]);
 
     // Generate captcha on mount
     useEffect(() => {
@@ -60,6 +71,11 @@ export default function LoginPage() {
         setActiveSlide((prev) => (prev - 1 + SLIDER_IMAGES.length) % SLIDER_IMAGES.length);
     };
 
+    const handleQuickLogin = (userIdVal: string, passwordVal: string) => {
+        setUserId(userIdVal);
+        setPassword(passwordVal);
+    };
+
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -82,30 +98,37 @@ export default function LoginPage() {
 
         setIsLoading(true);
 
-        // Simulate login
+        // Authenticate user
         setTimeout(() => {
+            const result = login(userId, password);
             setIsLoading(false);
-            toast.success('Login successful!');
-            router.push('/budget-estimation/ddo-creator');
-        }, 1500);
+
+            if (result.success) {
+                toast.success('Login successful!');
+                // Router will redirect via useEffect
+            } else {
+                toast.error(result.error || 'Invalid credentials');
+                refreshCaptcha();
+            }
+        }, 1000);
     };
 
     return (
         <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
             {/* Main Container - Wider and more compact */}
-            <div className="w-full max-w-6xl bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col lg:flex-row min-h-[480px]">
+            <div className="w-full max-w-6xl bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col lg:flex-row min-h-[520px]">
 
                 {/* Left Side - Login Form - More compact */}
-                <div className="w-full lg:w-[380px] p-6 lg:p-8 flex flex-col">
+                <div className="w-full lg:w-[420px] p-6 lg:p-8 flex flex-col">
                     {/* Header with Logo - Reduced margins */}
-                    <div className="text-center mb-4">
+                    <div className="text-center mb-3">
                         {/* Logo */}
-                        <div className="flex justify-center mb-3">
+                        <div className="flex justify-center mb-2">
                             <Image
                                 src="/logo.png"
                                 alt="Logo"
-                                width={120}
-                                height={120}
+                                width={100}
+                                height={100}
                                 className="object-contain"
                             />
                         </div>
@@ -210,8 +233,39 @@ export default function LoginPage() {
                         </Button>
                     </form>
 
+                    {/* Demo Credentials Hint */}
+                    <div className="mt-3">
+                        <button
+                            type="button"
+                            onClick={() => setShowHints(!showHints)}
+                            className="w-full flex items-center justify-center gap-2 text-xs text-blue-600 hover:text-blue-700"
+                        >
+                            <Info size={14} />
+                            {showHints ? 'Hide' : 'Show'} Demo Credentials
+                        </button>
+
+                        {showHints && (
+                            <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                <p className="text-xs text-blue-800 font-medium mb-2">Click to auto-fill:</p>
+                                <div className="space-y-1">
+                                    {DUMMY_USERS.map((user) => (
+                                        <button
+                                            key={user.userId}
+                                            type="button"
+                                            onClick={() => handleQuickLogin(user.userId, user.password)}
+                                            className="w-full text-left px-2 py-1 text-xs hover:bg-blue-100 rounded transition-colors flex justify-between items-center"
+                                        >
+                                            <span className="font-medium text-blue-700">{user.userId}</span>
+                                            <span className="text-blue-500">{user.roles.join(', ')}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
                     {/* Footer Links - Compact */}
-                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
                         <a href="#" className="text-xs text-blue-600 hover:underline">
                             Forgot Password?/पासवर्ड भूल गए?
                         </a>

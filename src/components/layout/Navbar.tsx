@@ -4,7 +4,6 @@ import React from 'react';
 import {
     Bell,
     Search,
-    Menu,
     ChevronRight,
     LayoutGrid,
     FileText,
@@ -20,11 +19,14 @@ import {
     FileCheck,
     AlertCircle,
     Award,
-    User
+    User,
+    LogOut,
+    RefreshCw,
+    Clock
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -40,6 +42,10 @@ import {
 } from "@/components/ui/popover"
 import { cn } from '@/lib/utils';
 import { NotificationsSheet } from './NotificationsSheet';
+import { usePathname, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { getModuleById } from '@/config/modules';
+import { useAuth, getRoleDisplayName, getRoleRoute } from '@/context/AuthContext';
 
 const MODULES = [
     { name: 'Budget', icon: Wallet, color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -72,15 +78,31 @@ const TranslateIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
-import { getModuleById } from '@/config/modules';
-
-// ... (keep existing imports)
-
 export function Navbar() {
     const pathname = usePathname();
+    const router = useRouter();
+    const { user, activeRole, isAuthenticated, logout, switchRole } = useAuth();
     const segments = pathname.split('/').filter(Boolean);
+
+    // Filter out role-specific segments from breadcrumbs
+    const filteredSegments = segments.filter(seg =>
+        !['ddo-creator', 'ddo-verifier', 'ddo-approver'].includes(seg)
+    );
+
+    const handleLogout = () => {
+        logout();
+        router.push('/login');
+    };
+
+    const handleSwitchRole = (role: 'creator' | 'verifier' | 'approver') => {
+        switchRole(role);
+        router.push(getRoleRoute(role));
+    };
+
+    // Get user initials for avatar
+    const getInitials = (name: string) => {
+        return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+    };
 
     return (
         <nav className="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-md border-b border-slate-200 h-16 px-6 pl-20 flex items-center justify-between shadow-sm">
@@ -90,9 +112,9 @@ export function Navbar() {
                     <Link href="/dashboard" className="hover:text-blue-700 cursor-pointer transition-colors font-medium">
                         Home
                     </Link>
-                    {segments.map((segment, index) => {
+                    {filteredSegments.map((segment, index) => {
                         const path = `/${segments.slice(0, index + 1).join('/')}`;
-                        const isLast = index === segments.length - 1;
+                        const isLast = index === filteredSegments.length - 1;
 
                         // Resolve module name if it's a module ID
                         const moduleConfig = getModuleById(segment);
@@ -190,31 +212,70 @@ export function Navbar() {
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                            <Avatar className="h-9 w-9 border border-slate-200 bg-slate-100">
-                                <AvatarFallback className="bg-slate-100 text-slate-600">
-                                    <User size={20} />
+                            <Avatar className="h-9 w-9 border border-slate-200 bg-blue-100">
+                                <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
+                                    {user ? getInitials(user.name) : <User size={20} />}
                                 </AvatarFallback>
                             </Avatar>
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56" align="end" forceMount>
-                        <DropdownMenuLabel className="font-normal">
-                            <div className="flex flex-col space-y-1">
-                                <p className="text-sm font-medium leading-none">Rajeshwar Dongre</p>
-                                <p className="text-xs leading-none text-muted-foreground">
-                                    Assistant Programmer
-                                </p>
+                    <DropdownMenuContent className="w-72" align="end" forceMount>
+                        {/* User Info Header */}
+                        <div className="p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-t-md">
+                            <p className="text-sm font-bold text-blue-800">Welcome {user?.name || 'User'},</p>
+                            <p className="text-xs text-blue-700">
+                                {user?.designation}-{user?.ddoCode}, {user?.department}, {user?.location}
+                            </p>
+                            <div className="flex items-center gap-1 mt-1 text-xs text-blue-600">
+                                <Clock size={12} />
+                                <span>Last Login: {user?.lastLogin || 'N/A'}</span>
                             </div>
-                        </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
+                        </div>
+
+                        {/* Current Role */}
+                        {activeRole && (
+                            <div className="px-3 py-2 border-b border-slate-100">
+                                <p className="text-xs text-slate-500">Current Role</p>
+                                <p className="text-sm font-semibold text-slate-800">{getRoleDisplayName(activeRole)}</p>
+                            </div>
+                        )}
+
+                        {/* Role Switcher - Only for multi-role users */}
+                        {user && user.roles.length > 1 && (
+                            <>
+                                <DropdownMenuLabel className="text-xs text-slate-500 font-normal flex items-center gap-1">
+                                    <RefreshCw size={12} />
+                                    Switch Role
+                                </DropdownMenuLabel>
+                                {user.roles.map((role) => (
+                                    <DropdownMenuItem
+                                        key={role}
+                                        onClick={() => handleSwitchRole(role)}
+                                        className={cn(
+                                            "cursor-pointer",
+                                            activeRole === role && "bg-blue-50 text-blue-700 font-medium"
+                                        )}
+                                    >
+                                        {getRoleDisplayName(role)}
+                                        {activeRole === role && <span className="ml-auto text-blue-600">✓</span>}
+                                    </DropdownMenuItem>
+                                ))}
+                                <DropdownMenuSeparator />
+                            </>
+                        )}
+
+                        <DropdownMenuItem className="cursor-pointer">
                             Profile
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem className="cursor-pointer">
                             Settings
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600">
+                        <DropdownMenuItem
+                            className="text-red-600 cursor-pointer"
+                            onClick={handleLogout}
+                        >
+                            <LogOut size={14} className="mr-2" />
                             Log out
                         </DropdownMenuItem>
                     </DropdownMenuContent>
