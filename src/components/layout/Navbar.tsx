@@ -96,7 +96,7 @@ export function Navbar() {
 
     const handleSwitchRole = (role: 'creator' | 'verifier' | 'approver') => {
         switchRole(role);
-        router.push(getRoleRoute(role));
+        router.push('/budget');
     };
 
     // Get user initials for avatar
