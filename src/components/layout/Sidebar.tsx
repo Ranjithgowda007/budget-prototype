@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
     ChevronRight,
     ChevronDown,
@@ -97,8 +98,13 @@ export function Sidebar({ items = [] }: { items?: SidebarItem[] }) {
             {/* Logo Area */}
             <div className="h-16 flex items-center justify-center border-b border-slate-100 min-h-[4rem]">
                 <div className="flex items-center gap-3 overflow-hidden whitespace-nowrap px-4 w-full">
-                    <div className="bg-blue-800 text-white p-1.5 rounded-lg shrink-0">
-                        <Landmark size={24} />
+                    <div className="shrink-0 w-9 h-9 relative">
+                        <Image
+                            src="/logo.png"
+                            alt="Logo"
+                            fill
+                            className="object-contain"
+                        />
                     </div>
                     <span className={cn(
                         "font-bold text-lg text-slate-800 transition-opacity duration-200",
