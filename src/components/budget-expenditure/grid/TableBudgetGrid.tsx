@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { BudgetLineItem, HistoricalData, EstimationRecord } from '@/data/budget-expenditure/types';
 import { formatCurrency, MOCK_HISTORICAL_DATA } from '@/data/budget-expenditure/mockData';
 import { Input } from '@/components/ui/input';
@@ -69,6 +69,9 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
     const [breakupModalOpen, setBreakupModalOpen] = useState(false);
     const [activeBreakupLine, setActiveBreakupLine] = useState<BudgetLineItem | null>(null);
     const [breakupData, setBreakupData] = useState<Record<string, BreakupItem[]>>({});
+
+    // Scroll container ref
+    const tableContainerRef = useRef<HTMLDivElement>(null);
 
     // Column visibility state - all visible by default (removed chargedOrVoted)
     const [visibleColumns, setVisibleColumns] = useState<Set<string>>(new Set([
@@ -510,11 +513,12 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
             </header>
 
             {/* Scrollable Table Container */}
-            <main className="flex-1 overflow-auto px-4 pb-4">
-                <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-                    <div className="overflow-auto max-h-[calc(100vh-200px)]">
+            <main className="flex-1 flex flex-col overflow-hidden px-4 pb-4">
+                <div className="bg-white rounded-lg border border-slate-200 shadow-sm flex flex-col overflow-hidden flex-1">
+                    {/* Single scrollable container for entire table including footer */}
+                    <div ref={tableContainerRef} className="flex-1 overflow-auto">
                         <table className="w-full text-sm border-collapse">
-                            {/* Sticky Header with Sort/Filter/Color */}
+                            {/* Sticky Header */}
                             <thead className="bg-slate-100 sticky top-0 z-20">
                                 <tr>
                                     {displayColumns.map((col, idx) => {
@@ -536,7 +540,7 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
                                                 )}
                                             >
                                                 <div className="flex flex-col gap-1">
-                                                    {/* Header Label with Sort & Actions */}
+                                                    {/* Header Label with Filter & Color Actions */}
                                                     <div className="flex items-center gap-1">
                                                         <span className="truncate">{col.label}</span>
                                                         <div className="flex items-center gap-0.5 ml-auto">
@@ -627,13 +631,21 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
                                         ? ((data.budgetEstimateNextYear - history.currentYearBE) / history.currentYearBE * 100).toFixed(1)
                                         : null;
 
+                                    // Determine solid background color for sticky cells
+                                    const getStickyBgColor = () => {
+                                        if (isSubmitted) return 'bg-green-50';
+                                        if (isSaved) return 'bg-blue-50';
+                                        return rowIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50';
+                                    };
+                                    const stickyBg = getStickyBgColor();
+
                                     // Render cell content based on column key
                                     const renderCell = (colKey: string) => {
                                         switch (colKey) {
                                             case 'srNo':
-                                                return <td key={colKey} className="px-2 py-2 sticky left-0 z-10 bg-inherit font-bold text-blue-600 text-center">{item.srNo}</td>;
+                                                return <td key={colKey} className={cn("px-2 py-2 sticky left-0 z-10 font-bold text-blue-600 text-center", stickyBg)}>{item.srNo}</td>;
                                             case 'budgetHead':
-                                                return <td key={colKey} className="px-2 py-2 sticky left-12 z-10 bg-inherit border-r border-slate-200"><code className="text-xs font-numeric font-semibold text-slate-900">{item.budgetHead}</code></td>;
+                                                return <td key={colKey} className={cn("px-2 py-2 sticky left-12 z-10 border-r border-slate-200", stickyBg)}><code className="text-xs font-numeric font-semibold text-slate-900">{item.budgetHead}</code></td>;
                                             // Budget head component columns
                                             case 'demandNo':
                                                 return <td key={colKey} className={cn("px-2 py-2 text-center font-mono text-xs font-medium text-slate-700", columnColors[colKey])}>{item.demandNo}</td>;
@@ -720,8 +732,8 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
                                 })}
                             </tbody>
 
-                            {/* Summation Footer */}
-                            <tfoot className="bg-slate-100 sticky bottom-0 border-t-2 border-slate-300">
+                            {/* Summation Footer - sticky at bottom */}
+                            <tfoot className="bg-slate-100 sticky bottom-0 z-20 border-t-2 border-slate-300">
                                 <tr>
                                     {displayColumns.map((col, idx) => {
                                         const isFirstSticky = col.key === 'srNo';
@@ -746,8 +758,8 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
                                                 key={col.key}
                                                 className={cn(
                                                     "px-2 py-3 text-xs font-bold text-slate-800 bg-slate-100",
-                                                    isFirstSticky && "sticky left-0 z-40",
-                                                    isSecondSticky && "sticky left-12 z-40 border-r border-slate-300",
+                                                    isFirstSticky && "sticky left-0 z-30",
+                                                    isSecondSticky && "sticky left-12 z-30 border-r border-slate-300",
                                                     isNumeric && "text-right font-numeric",
                                                     columnColor && columnColor.replace('-50', '-100')
                                                 )}
