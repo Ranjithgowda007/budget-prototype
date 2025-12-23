@@ -5,7 +5,7 @@ import { BudgetLineItem, HistoricalData, EstimationRecord } from '@/data/budget-
 import { formatCurrency, MOCK_HISTORICAL_DATA } from '@/data/budget-expenditure/mockData';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, ArrowLeft, Save, Check, Columns, Eye, EyeOff, Upload, Download, RotateCcw, ArrowRight, CheckCircle2, Clock, Layers, ArrowUpDown, ArrowUp, ArrowDown, Palette, X } from 'lucide-react';
+import { Search, Filter, ArrowLeft, Save, Check, Columns, Eye, EyeOff, Upload, Download, RotateCcw, ArrowRight, CheckCircle2, Clock, Layers, Palette, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -78,10 +78,6 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
         'be2', 'be3', 'remarks'
     ]));
 
-    // Sorting state
-    const [sortColumn, setSortColumn] = useState<string | null>(null);
-    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-
     // Column coloring state
     const [columnColors, setColumnColors] = useState<Record<string, string>>({});
     const [showColorPicker, setShowColorPicker] = useState<string | null>(null);
@@ -90,7 +86,7 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
     const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
     const [activeFilterColumn, setActiveFilterColumn] = useState<string | null>(null);
 
-    // Available colors for column highlighting
+    // Available colors for column highlighting - expanded palette
     const colorOptions = [
         { name: 'None', value: '' },
         { name: 'Blue', value: 'bg-blue-50' },
@@ -99,6 +95,15 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
         { name: 'Purple', value: 'bg-violet-50' },
         { name: 'Pink', value: 'bg-pink-50' },
         { name: 'Cyan', value: 'bg-cyan-50' },
+        { name: 'Orange', value: 'bg-orange-50' },
+        { name: 'Red', value: 'bg-red-50' },
+        { name: 'Indigo', value: 'bg-indigo-50' },
+        { name: 'Emerald', value: 'bg-emerald-50' },
+        { name: 'Rose', value: 'bg-rose-50' },
+        { name: 'Teal', value: 'bg-teal-50' },
+        { name: 'Lime', value: 'bg-lime-50' },
+        { name: 'Sky', value: 'bg-sky-50' },
+        { name: 'Fuchsia', value: 'bg-fuchsia-50' },
     ];
 
     const getItemFormData = (itemId: string): ItemFormData => {
@@ -134,6 +139,16 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
         switch (colKey) {
             case 'srNo': return item.srNo || '';
             case 'budgetHead': return item.budgetHead || '';
+            // Budget head component columns
+            case 'demandNo': return item.demandNo || '';
+            case 'majorHead': return item.majorHead || '';
+            case 'subMajorHead': return item.subMajorHead || '';
+            case 'minorHead': return item.minorHead || '';
+            case 'segmentHead': return item.segmentHead || '';
+            case 'ddoCode': return item.ddoCode || '';
+            case 'chargedOrVoted': return item.chargedOrVoted || '';
+            case 'objectHead': return item.objectHead || '';
+            case 'detailHead': return item.detailHead || '';
             case 'schemeNomenclature': return item.schemeNomenclature || item.scheme || '';
             case 'bePrev': return history?.fy1 || 0;
             case 'expPrev': return history?.actualTillDate || 0;
@@ -174,22 +189,8 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
             return matchesSearch && matchesStatus && matchesColumnFilters;
         });
 
-        // Apply sorting
-        if (sortColumn) {
-            result = [...result].sort((a, b) => {
-                const aVal = getCellValue(a, sortColumn);
-                const bVal = getCellValue(b, sortColumn);
-
-                if (typeof aVal === 'number' && typeof bVal === 'number') {
-                    return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
-                }
-                const comparison = String(aVal).localeCompare(String(bVal));
-                return sortDirection === 'asc' ? comparison : -comparison;
-            });
-        }
-
         return result;
-    }, [items, estimations, searchQuery, statusFilter, columnFilters, sortColumn, sortDirection]);
+    }, [items, estimations, searchQuery, statusFilter, columnFilters]);
 
     // Count returned items
     const returnedCount = estimations.filter(est => est.status === 'returned').length;
@@ -222,10 +223,20 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
         toast.success(`${itemsWithData.length} items submitted for verification`);
     };
 
-    // Column definitions (removed chargedOrVoted, added numeric type for summation)
+    // Column definitions (added budget head breakdown columns, hidden by default)
     const columns = [
         { key: 'srNo', label: 'Sr. No', width: 'w-12', sticky: true },
         { key: 'budgetHead', label: 'Budget Head', width: 'w-64', sticky: true },
+        // Budget head breakdown columns (hidden by default)
+        { key: 'demandNo', label: 'Demand No.', width: 'w-16' },
+        { key: 'majorHead', label: 'Major Head', width: 'w-16' },
+        { key: 'subMajorHead', label: 'Sub-Major', width: 'w-16' },
+        { key: 'minorHead', label: 'Minor Head', width: 'w-16' },
+        { key: 'segmentHead', label: 'Segment', width: 'w-16' },
+        { key: 'ddoCode', label: 'DDO Code', width: 'w-24' },
+        { key: 'chargedOrVoted', label: 'C/V', width: 'w-14' },
+        { key: 'objectHead', label: 'Object', width: 'w-16' },
+        { key: 'detailHead', label: 'Detail', width: 'w-16' },
         { key: 'schemeNomenclature', label: 'Scheme Name', width: 'w-40' },
         { key: 'bePrev', label: `BE (${FY.prev})`, width: 'w-28', numeric: true },
         { key: 'expPrev', label: `Exp. (${FY.prev})`, width: 'w-28', numeric: true },
@@ -241,16 +252,6 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
         { key: 'be3', label: `BE3 (${FY.nextPlus2})`, width: 'w-32', editable: true, numeric: true },
         { key: 'remarks', label: 'DDO Remarks', width: 'w-48', editable: true },
     ];
-
-    // Handle sorting
-    const handleSort = (columnKey: string) => {
-        if (sortColumn === columnKey) {
-            setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
-        } else {
-            setSortColumn(columnKey);
-            setSortDirection('asc');
-        }
-    };
 
     // Handle column color change
     const handleColorChange = (columnKey: string, color: string) => {
@@ -539,21 +540,6 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
                                                     <div className="flex items-center gap-1">
                                                         <span className="truncate">{col.label}</span>
                                                         <div className="flex items-center gap-0.5 ml-auto">
-                                                            {/* Sort Button */}
-                                                            <button
-                                                                onClick={() => handleSort(col.key)}
-                                                                className={cn(
-                                                                    "p-0.5 rounded hover:bg-slate-200 transition-colors",
-                                                                    sortColumn === col.key && "text-blue-600"
-                                                                )}
-                                                                title="Sort column"
-                                                            >
-                                                                {sortColumn === col.key ? (
-                                                                    sortDirection === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />
-                                                                ) : (
-                                                                    <ArrowUpDown size={12} className="text-slate-400" />
-                                                                )}
-                                                            </button>
                                                             {/* Filter Button */}
                                                             <button
                                                                 onClick={() => setActiveFilterColumn(activeFilterColumn === col.key ? null : col.key)}
@@ -648,6 +634,25 @@ export function TableBudgetGrid({ role, items, estimations, viewToggle }: TableB
                                                 return <td key={colKey} className="px-2 py-2 sticky left-0 z-10 bg-inherit font-bold text-blue-600 text-center">{item.srNo}</td>;
                                             case 'budgetHead':
                                                 return <td key={colKey} className="px-2 py-2 sticky left-12 z-10 bg-inherit border-r border-slate-200"><code className="text-xs font-numeric font-semibold text-slate-900">{item.budgetHead}</code></td>;
+                                            // Budget head component columns
+                                            case 'demandNo':
+                                                return <td key={colKey} className={cn("px-2 py-2 text-center font-mono text-xs font-medium text-slate-700", columnColors[colKey])}>{item.demandNo}</td>;
+                                            case 'majorHead':
+                                                return <td key={colKey} className={cn("px-2 py-2 text-center font-mono text-xs font-medium text-slate-700", columnColors[colKey])}>{item.majorHead}</td>;
+                                            case 'subMajorHead':
+                                                return <td key={colKey} className={cn("px-2 py-2 text-center font-mono text-xs font-medium text-slate-700", columnColors[colKey])}>{item.subMajorHead}</td>;
+                                            case 'minorHead':
+                                                return <td key={colKey} className={cn("px-2 py-2 text-center font-mono text-xs font-medium text-slate-700", columnColors[colKey])}>{item.minorHead}</td>;
+                                            case 'segmentHead':
+                                                return <td key={colKey} className={cn("px-2 py-2 text-center font-mono text-xs font-medium text-slate-700", columnColors[colKey])}>{item.segmentHead}</td>;
+                                            case 'ddoCode':
+                                                return <td key={colKey} className={cn("px-2 py-2 text-center font-mono text-xs font-medium text-slate-700", columnColors[colKey])}>{item.ddoCode}</td>;
+                                            case 'chargedOrVoted':
+                                                return <td key={colKey} className={cn("px-2 py-2 text-center font-medium", columnColors[colKey], item.chargedOrVoted === 'Charged' ? 'text-amber-600' : 'text-blue-600')}>{item.chargedOrVoted === 'Charged' ? 'C' : 'V'}</td>;
+                                            case 'objectHead':
+                                                return <td key={colKey} className={cn("px-2 py-2 text-center font-mono text-xs font-medium text-slate-700", columnColors[colKey])}>{item.objectHead}</td>;
+                                            case 'detailHead':
+                                                return <td key={colKey} className={cn("px-2 py-2 text-center font-mono text-xs font-medium text-slate-700", columnColors[colKey])}>{item.detailHead}</td>;
                                             case 'schemeNomenclature':
                                                 return <td key={colKey} className={cn("px-2 py-2 text-slate-700 font-medium truncate max-w-[160px]", columnColors[colKey])} title={item.schemeNomenclature || item.scheme}>{item.schemeNomenclature || item.scheme}</td>;
                                             case 'bePrev':
