@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Eye, EyeOff, RefreshCw, Lock, User, ChevronLeft, ChevronRight, Info } from 'lucide-react';
+import { Eye, EyeOff, Lock, User, ChevronLeft, ChevronRight, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { useAuth, getRoleRoute } from '@/context/AuthContext';
@@ -16,23 +16,11 @@ const SLIDER_IMAGES = [
     '/login-screen/3.png',
 ];
 
-// Generate random captcha
-const generateCaptcha = (): string => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let captcha = '';
-    for (let i = 0; i < 6; i++) {
-        captcha += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return captcha.split('').join(' ');
-};
-
 export default function LoginPage() {
     const router = useRouter();
     const { login, isAuthenticated, activeRole } = useAuth();
     const [userId, setUserId] = useState('');
     const [password, setPassword] = useState('');
-    const [captchaInput, setCaptchaInput] = useState('');
-    const [captcha, setCaptcha] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [activeSlide, setActiveSlide] = useState(0);
@@ -45,22 +33,12 @@ export default function LoginPage() {
         }
     }, [isAuthenticated, activeRole, router]);
 
-    // Generate captcha on mount
-    useEffect(() => {
-        setCaptcha(generateCaptcha());
-    }, []);
-
     // Auto-slide every 5 seconds
     useEffect(() => {
         const interval = setInterval(() => {
             setActiveSlide((prev) => (prev + 1) % SLIDER_IMAGES.length);
         }, 5000);
         return () => clearInterval(interval);
-    }, []);
-
-    const refreshCaptcha = useCallback(() => {
-        setCaptcha(generateCaptcha());
-        setCaptchaInput('');
     }, []);
 
     const nextSlide = () => {
@@ -89,13 +67,6 @@ export default function LoginPage() {
             return;
         }
 
-        const captchaClean = captcha.replace(/\s/g, '').toLowerCase();
-        if (captchaInput.toLowerCase() !== captchaClean) {
-            toast.error('Incorrect captcha. Please try again.');
-            refreshCaptcha();
-            return;
-        }
-
         setIsLoading(true);
 
         // Authenticate user
@@ -108,7 +79,6 @@ export default function LoginPage() {
                 // Router will redirect via useEffect
             } else {
                 toast.error(result.error || 'Invalid credentials');
-                refreshCaptcha();
             }
         }, 1000);
     };
@@ -175,41 +145,6 @@ export default function LoginPage() {
                                 >
                                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                                 </button>
-                            </div>
-                        </div>
-
-                        {/* Captcha - Inline layout */}
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-slate-700">
-                                Captcha
-                            </label>
-                            <div className="flex items-center gap-2">
-                                {/* Captcha Display */}
-                                <div className="h-10 px-3 bg-slate-50 border border-slate-300 rounded-lg flex items-center justify-center min-w-[100px]">
-                                    <span
-                                        className="text-base font-bold tracking-[0.15em] text-slate-800 select-none"
-                                        style={{ fontFamily: 'monospace' }}
-                                    >
-                                        {captcha}
-                                    </span>
-                                </div>
-                                {/* Refresh Button */}
-                                <button
-                                    type="button"
-                                    onClick={refreshCaptcha}
-                                    className="h-10 w-10 flex-shrink-0 bg-slate-100 hover:bg-slate-200 rounded-lg flex items-center justify-center transition-colors border border-slate-300"
-                                >
-                                    <RefreshCw size={16} className="text-blue-600" />
-                                </button>
-                                {/* Captcha Input */}
-                                <Input
-                                    type="text"
-                                    value={captchaInput}
-                                    onChange={(e) => setCaptchaInput(e.target.value)}
-                                    placeholder="Enter Captcha"
-                                    className="h-10 bg-white border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg text-sm flex-1"
-                                    autoComplete="off"
-                                />
                             </div>
                         </div>
 
